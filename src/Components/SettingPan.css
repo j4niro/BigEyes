@@ -1,0 +1,12 @@
+.container-settingPan {
+    width: 132px;
+    height : 355px;
+    background-color: #899785;
+    border-radius: 3px;
+}
+
+.YearInput {
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+}
