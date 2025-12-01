@@ -7,6 +7,8 @@ import {
   setYearRange,
   type Latitude 
 } from '../redux/Slice/GlobalSlice'
+import cursor from '../../public/Cursor_Latitude_Select.png'
+import areaCursor from '../../public/area_select.png'
 
 export const SettingPan = () => {
   const dispatch = useAppDispatch()
@@ -16,25 +18,26 @@ export const SettingPan = () => {
 
   const [newLatitude, setNewLatitude] = useState('')
   const [isLatitudeMode, setIsLatitudeMode] = useState(true)
+  const [yearInput, setYearInput] = useState(yearRange.start.toString())
 
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
-    const year = parseInt(value)
-    
-    // Permet de vider l'input ou d'entrer des valeurs partielles
-    if (value === '' || (year >= 1880 && year <= 2025)) {
-      dispatch(setYearRange({ start: year || 1880, end: year || 1880 }))
-    }
+    setYearInput(value)
   }
 
   const handleYearBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const year = parseInt(e.target.value)
+    const year = parseInt(yearInput)
     
     // Validation finale quand on quitte l'input
     if (isNaN(year) || year < 1880) {
       dispatch(setYearRange({ start: 1880, end: 1880 }))
+      setYearInput('1880')
     } else if (year > 2025) {
       dispatch(setYearRange({ start: 2025, end: 2025 }))
+      setYearInput('2025')
+    } else {
+      dispatch(setYearRange({ start: year, end: year }))
+      setYearInput(year.toString())
     }
   }
 
@@ -73,7 +76,7 @@ export const SettingPan = () => {
           className='year-input'
           min="1880"
           max="2025"
-          value={yearRange.start}
+          value={yearInput}
           onChange={handleYearChange}
           onBlur={handleYearBlur}
         />
@@ -103,12 +106,13 @@ export const SettingPan = () => {
         </div>
       </div>
 
+    <div className='mode-buttons-section'>
       {/* Latitude Select Button */}
       <button 
         className={`mode-button ${isLatitudeMode ? 'active' : ''}`}
         onClick={handleLatitudeModeToggle}
       >
-        <span className='cursor-icon'>🖱️</span>
+        <span className='cursor-icon'><img src={cursor} alt="cursor" /></span>
         Latitude select
       </button>
 
@@ -117,7 +121,7 @@ export const SettingPan = () => {
         className={`mode-button ${!isLatitudeMode ? 'active' : ''}`}
         onClick={handleAreaModeToggle}
       >
-        <span className='cursor-icon'>🖱️</span>
+        <span className='cursor-icon'><img src={areaCursor} alt="cursor" /></span>
         Area select
       </button>
 
@@ -127,6 +131,10 @@ export const SettingPan = () => {
         <span className='counter-text'>Selections</span>
         <span className='counter-badge'>{totalSelections}</span>
       </div>
+      
+    </div>
+
+      
     </div>
   )
 }
