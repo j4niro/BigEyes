@@ -1,12 +1,179 @@
 .container-settingPan {
     width: 132px;
-    height : 355px;
     background-color: #899785;
-    border-radius: 3px;
+    border-radius: 4px;
+    padding: 0;
+    color: #2d2d2d;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.YearInput {
+/* Header */
+.header {
+    background-color: #899785;
+    color: white;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 4px 4px 0 0;
+}
+
+/* Section */
+.section {
+    padding: 12px;
+    background-color: #899785;
+}
+
+.section-label {
+    display: block;
+    font-size: 12px;
+    color: white;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+/* Year Input */
+.year-input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    font-size: 13px;
+    background-color: white;
+    color: #2d2d2d;
+    box-sizing: border-box;
+    /* background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E"); */
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 28px;
+}
+
+.year-input:focus {
+    outline: 2px solid #5a6b56;
+    border-color: #5a6b56;
+}
+
+/* Latitude Input with Button */
+.input-with-button {
     display: flex;
-    flex-direction: column;
-    margin: 10px;
+    gap: 6px;
+}
+
+.latitude-input {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    font-size: 13px;
+    background-color: white;
+    color: #2d2d2d;
+    box-sizing: border-box;
+}
+
+.latitude-input:focus {
+    outline: 2px solid #5a6b56;
+    border-color: #5a6b56;
+}
+
+.add-button {
+    width: 32px;
+    height: 32px;
+    background-color: white;
+    color: black;
+    border: none;
+    border-radius: 4px;
+    font-size: 18px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+}
+
+.add-button:hover {
+    background-color: #4a5b46;
+}
+
+.add-button:active {
+    background-color: #3a4b36;
+}
+
+/* Mode Buttons */
+.mode-button {
+    width: 100%;
+    padding: 10px 12px;
+    background-color: white;
+    border: none;
+    border-top: 1px solid #d0d0d0;
+    font-size: 12px;
+    color: #2d2d2d;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+    font-weight: 500;
+}
+
+.mode-button:hover {
+    background-color: #f5f5f5;
+}
+
+.mode-button.active {
+    background-color: #e8ebe7;
+}
+
+.cursor-icon {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+
+/* Selections Counter */
+.selections-counter {
+    background-color: white;
+    border-top: 1px solid #d0d0d0;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #2d2d2d;
+    border-radius: 0 0 4px 4px;
+}
+
+.counter-icon {
+    font-size: 10px;
+    color: #666;
+}
+
+.counter-text {
+    flex: 1;
+    font-weight: 500;
+}
+
+.counter-badge {
+    background-color: #2d2d2d;
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Remove number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
 }
