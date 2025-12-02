@@ -13,7 +13,7 @@
 .map-wrapper {
   position: relative;
   width: 100%;
-  height: calc(100% - 60px);
+  height: calc(100% - 100px);
   overflow: hidden;
 }
 
@@ -148,6 +148,147 @@
   border-radius: 4px;
 }
 
+.year-navigation {
+  position: absolute;
+  bottom: 51px;
+  left: 0;
+  right: 0;
+  height: 15px;
+  background: linear-gradient(to bottom, #e0e0e0 0%, #797777 100%);
+  border-top: 1px solid #bbb;
+  border-bottom: 1px solid #aaa;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  z-index: 9;
+}
+
+/* Container du slider */
+.year-slider-container {
+  flex: 1;
+  position: relative;
+  height: 100%;
+  padding: 0 10px;
+}
+
+/* Label année au-dessus du curseur */
+.year-label {
+  position: absolute;
+  top: -25px;
+  width: 40px;
+  text-align: center;
+  background-color: white;
+  border: 1px solid #999;
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #333;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  z-index: 3;
+  transition: left 0.05s ease-out;
+}
+
+/* Graduations verticales */
+.year-graduations {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.graduation {
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent 0%, transparent 30%, #999 30%, #999 70%, transparent 70%, transparent 100%);
+}
+
+.graduation.major {
+  width: 2px;
+  background: linear-gradient(to bottom, transparent 0%, transparent 20%, #666 20%, #666 80%, transparent 80%, transparent 100%);
+}
+
+/* Slider */
+.year-slider {
+  position: absolute;
+  width: calc(100% - 10px);
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 34px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
+}
+
+/* Track invisible */
+.year-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 2px;
+  background: transparent;
+  border: none;
+}
+
+.year-slider::-moz-range-track {
+  width: 100%;
+  height: 2px;
+  background: transparent;
+  border: none;
+}
+
+/* Curseur Chrome/Safari */
+.year-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 12px solid #4a90e2;
+  cursor: pointer;
+  margin-top: -5px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+.year-slider::-webkit-slider-thumb:hover {
+  border-top-color: #357abd;
+}
+
+.year-slider::-webkit-slider-thumb:active {
+  border-top-color: #2a5f8f;
+}
+
+/* Curseur Firefox */
+.year-slider::-moz-range-thumb {
+  width: 0;
+  height: 0;
+  border: none;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 12px solid #4a90e2;
+  cursor: pointer;
+  background: transparent;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+.year-slider::-moz-range-thumb:hover {
+  border-top-color: #357abd;
+}
+
+.year-slider::-moz-range-thumb:active {
+  border-top-color: #2a5f8f;
+}
 
 
 .control-btn:hover {

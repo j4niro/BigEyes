@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import './Map.css'
 import '../../public/earth.png'
 import plus10 from '../../public/+10button.png'
@@ -9,6 +9,16 @@ import gostart from '../../public/gostart_button.png'
 import goend from '../../public/goend_button.png'
 
 export const Map = () => {
+
+const [currentYear, setCurrentYear] = useState(1880)
+
+  const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCurrentYear(parseInt(e.target.value))
+  }
+
+  // Calculer la position du label en pourcentage
+  const yearPercentage = ((currentYear - 1880) / (2025 - 1880)) * 100
+
   return (
     <div className='map-container'>
       {/* Carte du monde */}
@@ -46,6 +56,43 @@ export const Map = () => {
         </div>
       </div>
 
+      {/* Barre de navigation années */}
+      <div className='year-navigation'>
+        <div className='year-slider-container'>
+          {/* Label année au-dessus du curseur */}
+          <div 
+            className='year-label'
+            style={{ left: `calc(${yearPercentage}% - 5px)` }}
+          >
+            {currentYear}
+          </div>
+
+          {/* Graduations */}
+          <div className='year-graduations'>
+            {Array.from({length: 146}).map((_, i) => {
+              const year = 1880 + i
+              const isMajor = year % 10 === 0
+              return (
+                <div 
+                  key={year} 
+                  className={`graduation ${isMajor ? 'major' : ''}`}
+                />
+              )
+            })}
+          </div>
+          
+          {/* Slider */}
+          <input 
+            type="range" 
+            className='year-slider'
+            min="1880"
+            max="2025"
+            value={currentYear}
+            onChange={handleYearChange}
+            step="1"
+          />
+        </div>
+      </div>
       {/* Barre de contrôle d'animation */}
       <div className='animation-controls'>
         <button className='control-section speed-section'>
