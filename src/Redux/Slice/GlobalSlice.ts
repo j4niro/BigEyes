@@ -1,6 +1,7 @@
+// redux/Slice/GlobalSlice.ts
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-export type Dot = { // dot on the map
+export type Dot = {
     x: number,
     y: number,
 }
@@ -15,12 +16,14 @@ export type YearRange = {
     end:number,
 }
 
-export type Area = { // area on the map, it's a rectangle we can draw with two dots : top-left & bottom-right
-    id:number, // in case no name is provided
-    name:string, // for managing several area
+export type Area = {
+    id:number,
+    name:string,
     topLeft:Dot,
     bottomRight:Dot,
 }
+
+export type SelectionMode = 'latitude' | 'area' | null
 
 export type GlobalState = {
     selectedLatitudes : Array<Latitude>,
@@ -28,12 +31,12 @@ export type GlobalState = {
     selectedAreas : Array<Area>,
     currentAreaId:number|null,
     currentLatId:number|null,
-    currentSelectionMode:string|null,
+    currentSelectionMode: SelectionMode, // Type corrigé
 }
 
 const initialState: GlobalState = {
     selectedLatitudes : [],
-    yearRange : {start:1880, end:2025}, // if start === end then one year is selected
+    yearRange : {start:1880, end:2025},
     selectedAreas : [],
     currentAreaId: null,
     currentLatId: null,
@@ -43,10 +46,8 @@ const initialState: GlobalState = {
 const globalSlice = createSlice({
     name : 'global',
     initialState : initialState,
-    reducers: { //TODO: manage the reducers according to the data structure we decide to use 
+    reducers: {
         addLatitudeSelected : (state, action:PayloadAction<Latitude>)=>{
-            state.currentSelectionMode = "lat";
-
             state.selectedLatitudes.push({...action.payload});
             state.currentLatId = state.selectedLatitudes.length-1;
             state.selectedLatitudes[state.currentLatId].id = state.currentLatId;
@@ -66,8 +67,6 @@ const globalSlice = createSlice({
         },
 
         addAreaSelected : (state, action:PayloadAction<Area>) =>{
-            state.currentSelectionMode = "area";
-
             state.selectedAreas.push({...action.payload});
             state.currentAreaId = state.selectedAreas.length-1;
             state.selectedAreas[state.currentAreaId].id = state.currentAreaId;
@@ -80,10 +79,22 @@ const globalSlice = createSlice({
                 const element = state.selectedAreas[index];
                 element.id = index;
             }
+        },
+
+        setSelectionMode : (state, action:PayloadAction<SelectionMode>) => {
+            state.currentSelectionMode = action.payload;
         }
     }
 
 })
 
-export const {addLatitudeSelected, deleteLatitudeSelected, setYearRange, deleteAreaSelected, addAreaSelected, } = globalSlice.actions
+export const {
+    addLatitudeSelected, 
+    deleteLatitudeSelected, 
+    setYearRange, 
+    deleteAreaSelected, 
+    addAreaSelected,
+    setSelectionMode
+} = globalSlice.actions
+
 export default globalSlice.reducer
