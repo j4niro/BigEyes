@@ -1,0 +1,184 @@
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background-color: #f0f0f0;
+  background-image: url('../../public/earth.png');
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+/* Carte du monde */
+.map-wrapper {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 60px);
+  overflow: hidden;
+}
+
+.earth-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Grille de latitude */
+.latitude-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.latitude-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: rgba(128, 128, 128, 0.4);
+  border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.latitude-label {
+  position: absolute;
+  right: 10px;
+  top: -10px;
+  color: #4a9b8e;
+  font-size: 12px;
+  font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+/* Grille de longitude */
+.longitude-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.longitude-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px; /* Augmenté de 1px à 2px */
+  background-color: rgba(128, 128, 128, 0.4); /* Opacité augmentée */
+  border-right: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.longitude-label {
+  position: absolute;
+  top: 10px;
+  left: 2px;
+  color: red;
+  font-size: 12px;
+  font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+/* Barre de contrôle d'animation */
+.animation-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 51px;
+  background-color: #899785;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 0 20px;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.control-section {
+  background-color: #d9d9d9;
+  border-radius: 4px;
+  padding: 8px 15px;
+  font-size: 14px;
+  font-weight: 500;
+  color: black;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
+}
+
+
+.speed-section,
+.zoom-section {
+  min-width: 100px;
+  height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Contrôles de lecture */
+.playback-controls {
+  display: flex;
+  gap: 8px;
+  padding: 0;
+  flex: 1;
+  max-width: 600px;
+  height: 34px;
+  justify-content: center;
+  align-items: center;
+}
+
+.control-btn {
+  background-color: transparent;
+  border: none;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+
+
+.control-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+
+/* Indicateur d'année */
+.year-indicator {
+  position: absolute;
+  bottom: 70px;
+  left: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #2d2d2d;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 18px;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .animation-controls {
+    flex-direction: column;
+    height: auto;
+    padding: 10px;
+  }
+  
+  .playback-controls {
+    max-width: 100%;
+  }
+}

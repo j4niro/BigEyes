@@ -2,7 +2,22 @@ body {
     margin: 0 auto;
     padding: 0;
     box-sizing: border-box;
+    font-family: "montserrat";
     /*background-color: white;*/
 }
 
 
+/* App.css */
+.app-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.setting-pan-wrapper {
+  position: absolute;
+  top: 200px;
+  left: 20px;
+  z-index: 100;
+}
