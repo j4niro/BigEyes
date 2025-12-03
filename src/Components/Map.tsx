@@ -2,12 +2,14 @@ import React, { useState, useMemo, useRef, useEffect } from 'react'
 import './Map.css'
 import { useAppDispatch, useAppSelector } from '../Redux/Hooks/StoreHooks'
 import { MapController } from '../Controllers/MapController'
+import { AnomalyCanvas } from './AnomalyCanvas'
 import plus10 from '../../public/+10button.png'
 import moins10 from '../../public/-10button.png'
 import pause from  '../../public/Pause_Sign.png'
 import start from '../../public/Play_button_arrowhead.png'
 import gostart from '../../public/gostart_button.png'
 import goend from '../../public/goend_button.png'
+import earthImage from '../../public/earth.png'
 
 export const Map = () => {
   const dispatch = useAppDispatch()
@@ -21,20 +23,16 @@ export const Map = () => {
   const [currentYear, setCurrentYear] = useState(yearRange.start)
   const [mapDimensions, setMapDimensions] = useState({ width: 0, height: 0 })
 
-  // Créer le contrôleur
   const controller = useMemo(() => new MapController(dispatch), [dispatch])
 
-  // Synchroniser le mode de sélection
   useEffect(() => {
     controller.setSelectionMode(currentSelectionMode)
   }, [currentSelectionMode, controller])
 
-  // Synchroniser l'année
   useEffect(() => {
     setCurrentYear(yearRange.start)
   }, [yearRange.start])
 
-  // Récupérer les dimensions de la carte
   useEffect(() => {
     if (mapRef.current) {
       const updateDimensions = () => {
@@ -55,42 +53,52 @@ export const Map = () => {
 
   const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!mapRef.current) return
-
     const rect = mapRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
-
     controller.handleMapClick(x, y, mapDimensions.width, mapDimensions.height)
   }
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!mapRef.current) return
-
     const rect = mapRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
-
     controller.handleMouseDown(x, y)
   }
 
   const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!mapRef.current) return
-
     const rect = mapRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
-
     controller.handleMouseUp(x, y, mapDimensions.width, mapDimensions.height)
   }
 
   const yearPercentage = ((currentYear - 1880) / (2025 - 1880)) * 100
 
+  // Générer les graduations de latitude
+  const latitudeGraduations = useMemo(() => {
+    const grads = []
+    for (let lat = 80; lat >= -80; lat -= 20) {
+      const y = ((90 - lat) / 180) * 100
+      grads.push({ lat, y })
+    }
+    return grads
+  }, [])
 
-
+  // Générer les graduations de longitude
+  const longitudeGraduations = useMemo(() => {
+    const grads = []
+    for (let lon = -150; lon <= 180; lon += 30) {
+      const x = ((lon + 180) / 360) * 100
+      grads.push({ lon, x })
+    }
+    return grads
+  }, [])
 
   return (
     <div className='map-container'>
-      {/* Carte du monde */}
       <div 
         className='map-wrapper'
         ref={mapRef}
@@ -99,28 +107,39 @@ export const Map = () => {
         onMouseUp={handleMouseUp}
         style={{ cursor: currentSelectionMode ? 'crosshair' : 'default' }}
       >
+        {/* Canvas avec Terre + Anomalies */}
+        {mapDimensions.width > 0 && (
+          <AnomalyCanvas
+            year={currentYear}
+            tempData={tempData}
+            width={mapDimensions.width}
+            height={mapDimensions.height}
+            earthImageSrc={earthImage}
+          />
+        )}
+
         {/* Grille de latitude */}
         <div className='latitude-grid'>
-          {Array.from({length: 10}).map((_, i) => (
+          {latitudeGraduations.map(({ lat, y }) => (
             <div
-              key={i}
+              key={lat}
               className='latitude-line'
-              style={{top: `${i * 10}%`}}
+              style={{top: `${y}%`}}
             >
-              <span className='latitude-label'>{90 - i * 10}°</span>
+              <span className='latitude-label'>{lat}°</span>
             </div>
           ))}
         </div>
 
         {/* Grille de longitude */}
         <div className='longitude-grid'>
-          {Array.from({length: 20}).map((_, i) => (
+          {longitudeGraduations.map(({ lon, x }) => (
             <div 
-              key={i} 
+              key={lon} 
               className='longitude-line' 
-              style={{left: `${i * 5}%`}}
+              style={{left: `${x}%`}}
             >
-              <span className='longitude-label'>{i * 5}°</span>
+              <span className='longitude-label'>{lon}°</span>
             </div>
           ))}
         </div>
@@ -131,16 +150,16 @@ export const Map = () => {
           return (
             <div
               key={latitude.id}
-              className='selected-latitude-line'
               style={{
                 position: 'absolute',
                 top: `${y}px`,
                 left: 0,
                 right: 0,
-                height: '2px',
-                backgroundColor: 'rgba(255, 0, 0, 0.7)',
+                height: '3px',
+                backgroundColor: '#FFD700',
+                boxShadow: '0 0 10px #FFD700, 0 0 20px #FFD700',
                 pointerEvents: 'none',
-                zIndex: 10
+                zIndex: 20
               }}
             />
           )
@@ -150,55 +169,20 @@ export const Map = () => {
         {selectedAreas.map(area => (
           <div
             key={area.id}
-            className='selected-area'
             style={{
               position: 'absolute',
               left: `${area.topLeft.x}px`,
               top: `${area.topLeft.y}px`,
               width: `${area.bottomRight.x - area.topLeft.x}px`,
               height: `${area.bottomRight.y - area.topLeft.y}px`,
-              border: '2px solid rgba(0, 255, 0, 0.8)',
+              border: '3px solid #00FF00',
               backgroundColor: 'rgba(0, 255, 0, 0.1)',
+              boxShadow: '0 0 15px rgba(0, 255, 0, 0.8)',
               pointerEvents: 'none',
-              zIndex: 10
+              zIndex: 20
             }}
           />
         ))}
-        {tempData?.tempanomalies.map((cell: any, index: number) => {
-              const x = controller.convertLongitudeToMapX(
-                cell.lon,
-                mapDimensions.width
-              );
-              const y = controller.convertLatitudeToMapY(
-                cell.lat,
-                mapDimensions.height
-              );
-
-              const value = controller.getAnomalyValueAt(
-                cell.lat,
-                cell.lon,
-                currentYear,
-                tempData
-              );
-
-              const color = controller.getColorForAnomaly(value);
-
-              return (
-                <div
-                  key={index}
-                  style={{
-                    position: "absolute",
-                    left: x - 3,
-                    top: y - 3,
-                    width: 6,
-                    height: 6,
-                    backgroundColor: color,
-                    borderRadius: "50%",
-                    pointerEvents: "none",
-                  }}
-                />
-              );
-            })}
       </div>
 
       {/* Barre de navigation années */}
@@ -206,7 +190,7 @@ export const Map = () => {
         <div className='year-slider-container'>
           <div 
             className='year-label'
-            style={{ left: `calc(${yearPercentage}% - 5px)` }}
+            style={{ left: `calc(${yearPercentage}% - 20px)` }}
           >
             {currentYear}
           </div>
