@@ -36,9 +36,8 @@
   position: absolute;
   left: 0;
   right: 0;
-  height: 1px;
+  height: 0.5px;
   background-color: rgba(128, 128, 128, 0.4);
-  border-bottom: 1px solid rgba(128, 128, 128, 0.3);
 }
 
 .latitude-label {
@@ -68,9 +67,8 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 2px; /* Augmenté de 1px à 2px */
-  background-color: rgba(128, 128, 128, 0.4); /* Opacité augmentée */
-  border-right: 1px solid rgba(128, 128, 128, 0.3);
+  width: 0.5px; 
+  background-color: rgba(128, 128, 128, 0.4);
 }
 
 .longitude-label {

@@ -67,6 +67,7 @@ export const Map = () => {
     controller.handleMouseDown(x, y)
   }
 
+
   const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!mapRef.current) return
     const rect = mapRef.current.getBoundingClientRect()
@@ -80,7 +81,7 @@ export const Map = () => {
   // Générer les graduations de latitude
   const latitudeGraduations = useMemo(() => {
     const grads = []
-    for (let lat = 80; lat >= -80; lat -= 20) {
+    for (let lat = 88; lat >= -88; lat -= 20) {
       const y = ((90 - lat) / 180) * 100
       grads.push({ lat, y })
     }
@@ -90,7 +91,7 @@ export const Map = () => {
   // Générer les graduations de longitude
   const longitudeGraduations = useMemo(() => {
     const grads = []
-    for (let lon = -150; lon <= 180; lon += 30) {
+    for (let lon = -180; lon <= 180; lon += 20) {
       const x = ((lon + 180) / 360) * 100
       grads.push({ lon, x })
     }
@@ -155,9 +156,9 @@ export const Map = () => {
                 top: `${y}px`,
                 left: 0,
                 right: 0,
-                height: '3px',
-                backgroundColor: '#FFD700',
-                boxShadow: '0 0 10px #FFD700, 0 0 20px #FFD700',
+                height: '1px',
+                backgroundColor: 'red',
+                boxShadow: '0 0 10px red, 0 0 20px red',
                 pointerEvents: 'none',
                 zIndex: 20
               }}
@@ -175,7 +176,7 @@ export const Map = () => {
               top: `${area.topLeft.y}px`,
               width: `${area.bottomRight.x - area.topLeft.x}px`,
               height: `${area.bottomRight.y - area.topLeft.y}px`,
-              border: '3px solid #00FF00',
+              border: '1px solid #00FF00',
               backgroundColor: 'rgba(0, 255, 0, 0.1)',
               boxShadow: '0 0 15px rgba(0, 255, 0, 0.8)',
               pointerEvents: 'none',

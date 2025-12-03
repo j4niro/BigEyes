@@ -7,7 +7,7 @@ import {
   type Area,
   type Dot
 } from '../Redux/Slice/GlobalSlice'
-import type { TempAnomalyData, TempAnomalyArea } from '../Redux/Slice/dataSlice' 
+import type { TempAnomalyData, TempAnomalyArea } from '../Redux/Slice/DataSlice'
 
 export type SelectionMode = 'latitude' | 'area' | null
 

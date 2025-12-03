@@ -1,5 +1,5 @@
 // Utils/AnomalyUtils.ts
-import type { TempAnomalyData, TempAnomalyArea } from "../Redux/Slice/dataSlice";
+import type { TempAnomalyData, TempAnomalyArea } from "../Redux/Slice/DataSlice";
 
 /**
  * Charge les données d’anomalie 
