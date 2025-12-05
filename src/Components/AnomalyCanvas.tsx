@@ -1,4 +1,4 @@
-// components/AnomalyCanvas.tsx - VERSION FINALE OPTIMISÉE
+// components/AnomalyCanvas.tsx 
 import React, { useRef, useEffect } from 'react'
 import type { TempAnomalyData } from '../Redux/Slice/DataSlice'
 
@@ -19,38 +19,50 @@ export const AnomalyCanvas: React.FC<AnomalyCanvasProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null)
+  const earthImageRef = useRef<HTMLImageElement | null>(null)
 
+  // Précharger l'image de la Terre une seule fois
   useEffect(() => {
-    if (!canvasRef.current || !overlayCanvasRef.current || width === 0 || height === 0) return
-
-    const baseCanvas = canvasRef.current
-    const baseCtx = baseCanvas.getContext('2d')
-    if (!baseCtx) return
-
-    const overlayCanvas = overlayCanvasRef.current
-    const overlayCtx = overlayCanvas.getContext('2d', { alpha: true })
-    if (!overlayCtx) return
-
     const earthImage = new Image()
     earthImage.src = earthImageSrc
-    
     earthImage.onload = () => {
-      // Canvas 1 : Image de la Terre (NET)
-      baseCtx.clearRect(0, 0, width, height)
-      baseCtx.drawImage(earthImage, 0, 0, width, height)
+      earthImageRef.current = earthImage
+      // Dessiner la Terre une seule fois
+      if (canvasRef.current) {
+        const ctx = canvasRef.current.getContext('2d')
+        if (ctx) {
+          ctx.clearRect(0, 0, width, height)
+          ctx.drawImage(earthImage, 0, 0, width, height)
+        }
+      }
+    }
+  }, [earthImageSrc, width, height])
 
-      // Canvas 2 : Anomalies avec interpolation
-      overlayCtx.clearRect(0, 0, width, height)
+  // Redessiner uniquement les anomalies quand l'année change
+  useEffect(() => {
+    if (!overlayCanvasRef.current || width === 0 || height === 0) return
 
-      const dataMap = createDataMap(tempData, year)
+    const overlayCanvas = overlayCanvasRef.current
+    const overlayCtx = overlayCanvas.getContext('2d', { 
+      alpha: true,
+      desynchronized: true // Optimisation pour animations
+    })
+    if (!overlayCtx) return
 
-      // Résolution augmentée pour plus de douceur
-      const resolution = 4 // Grille 4x plus dense
-      const cols = 90 * resolution
-      const rows = 45 * resolution
-      const cellWidth = width / cols
-      const cellHeight = height / rows
+    // Effacer le canvas overlay
+    overlayCtx.clearRect(0, 0, width, height)
 
+    const dataMap = createDataMap(tempData, year)
+
+    // Résolution réduite pour plus de fluidité pendant l'animation
+    const resolution = 3
+    const cols = 90 * resolution
+    const rows = 45 * resolution
+    const cellWidth = width / cols
+    const cellHeight = height / rows
+
+    // Utiliser requestAnimationFrame pour un rendu plus fluide
+    requestAnimationFrame(() => {
       for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
           const lon = -180 + ((col + 0.5) / cols) * 360
@@ -58,7 +70,7 @@ export const AnomalyCanvas: React.FC<AnomalyCanvasProps> = ({
 
           const result = interpolateValueSmartly(dataMap, lat, lon)
           
-          if (!result.hasData || Math.abs(result.value) < 0.08) continue
+          if (!result.hasData || Math.abs(result.value) < 0.1) continue
 
           const x = col * cellWidth
           const y = row * cellHeight
@@ -73,12 +85,12 @@ export const AnomalyCanvas: React.FC<AnomalyCanvasProps> = ({
           )
         }
       }
-    }
-  }, [year, tempData, width, height, earthImageSrc])
+    })
+  }, [year, tempData, width, height])
 
   return (
     <>
-      {/* Canvas 1 : Terre (NET) */}
+      {/* Canvas 1 : Terre (NET, dessiné une seule fois) */}
       <canvas
         ref={canvasRef}
         width={width}
@@ -94,7 +106,7 @@ export const AnomalyCanvas: React.FC<AnomalyCanvasProps> = ({
         }}
       />
       
-      {/* Canvas 2 : Anomalies (LISSÉ) */}
+      {/* Canvas 2 : Anomalies (mis à jour à chaque année) */}
       <canvas
         ref={overlayCanvasRef}
         width={width}
@@ -107,8 +119,9 @@ export const AnomalyCanvas: React.FC<AnomalyCanvasProps> = ({
           height: '100%',
           pointerEvents: 'none',
           zIndex: 6,
-          filter: 'blur(2.5px)', // Flou légèrement augmenté
-          opacity: 0.75 // Légèrement plus transparent
+          filter: 'blur(2.5px)',
+          opacity: 0.75,
+          willChange: 'contents' // Optimisation CSS
         }}
       />
     </>
@@ -135,13 +148,6 @@ function createDataMap(tempData: TempAnomalyData, year: number): Map<string, num
   return map
 }
 
-/**
- * INTERPOLATION BILINÉAIRE INTELLIGENTE
- * 
- * L'interpolation permet de créer des transitions douces entre les points de données.
- * Au lieu d'avoir des rectangles visibles (effet mosaïque), on calcule des valeurs
- * intermédiaires qui créent un dégradé continu.
- */
 function interpolateValueSmartly(
   dataMap: Map<string, number>,
   lat: number,
@@ -150,17 +156,15 @@ function interpolateValueSmartly(
   const latStep = 4
   const lonStep = 4
 
-  // Trouver les 4 coins de la cellule de grille 4x4
   const lat1 = Math.floor(lat / latStep) * latStep
   const lat2 = lat1 + latStep
   const lon1 = Math.floor(lon / lonStep) * lonStep
   const lon2 = lon1 + lonStep
 
-  // Récupérer les valeurs aux 4 coins
-  const v11 = dataMap.get(`${lat1},${lon1}`) // Coin haut-gauche
-  const v12 = dataMap.get(`${lat1},${lon2}`) // Coin haut-droite
-  const v21 = dataMap.get(`${lat2},${lon1}`) // Coin bas-gauche
-  const v22 = dataMap.get(`${lat2},${lon2}`) // Coin bas-droite
+  const v11 = dataMap.get(`${lat1},${lon1}`)
+  const v12 = dataMap.get(`${lat1},${lon2}`)
+  const v21 = dataMap.get(`${lat2},${lon1}`)
+  const v22 = dataMap.get(`${lat2},${lon2}`)
 
   const availableValues: { value: number }[] = []
   
@@ -169,12 +173,10 @@ function interpolateValueSmartly(
   if (v21 !== undefined) availableValues.push({ value: v21 })
   if (v22 !== undefined) availableValues.push({ value: v22 })
 
-  // Pas de données disponibles
   if (availableValues.length === 0) {
     return { value: 0, hasData: false, confidence: 0 }
   }
 
-  // Données insuffisantes pour interpoler
   if (availableValues.length < 2) {
     return { 
       value: availableValues[0].value, 
@@ -183,79 +185,53 @@ function interpolateValueSmartly(
     }
   }
 
-  // Facteurs d'interpolation (position relative dans la cellule)
-  const fx = (lon - lon1) / lonStep // 0 = gauche, 1 = droite
-  const fy = (lat - lat1) / latStep // 0 = haut, 1 = bas
+  const fx = (lon - lon1) / lonStep
+  const fy = (lat - lat1) / latStep
 
-  // Interpolation bilinéaire complète (4 valeurs disponibles)
   if (availableValues.length === 4) {
-    // Interpolation horizontale en haut
     const v1 = v11! * (1 - fx) + v12! * fx
-    // Interpolation horizontale en bas
     const v2 = v21! * (1 - fx) + v22! * fx
-    // Interpolation verticale entre les deux
     const result = v1 * (1 - fy) + v2 * fy
     return { value: result, hasData: true, confidence: 1.0 }
   }
 
-  // Moyenne simple si 2 ou 3 valeurs
   const avgValue = availableValues.reduce((sum, item) => sum + item.value, 0) / availableValues.length
   const confidence = availableValues.length / 4
 
   return { value: avgValue, hasData: true, confidence }
 }
 
-/**
- * Palette de couleurs AMÉLIORÉE avec transitions plus douces
- */
 function getColorForValue(value: number, confidence: number): string {
   const clampedValue = Math.max(-4, Math.min(6.5, value))
-  
-  // Opacité basée sur la confiance des données
   const baseOpacity = 0.45 + confidence * 0.2
   
-  // Palette étendue avec plus de nuances
   if (clampedValue <= -3) {
-    // Bleu marine très foncé (froid extrême)
     return `rgba(0, 10, 100, ${baseOpacity + 0.2})`
   } else if (clampedValue <= -2.5) {
-    // Bleu roi foncé
     return `rgba(0, 40, 160, ${baseOpacity + 0.18})`
   } else if (clampedValue <= -2) {
-    // Bleu roi
     return `rgba(0, 80, 200, ${baseOpacity + 0.15})`
   } else if (clampedValue <= -1.5) {
-    // Bleu vif
     return `rgba(30, 120, 240, ${baseOpacity + 0.12})`
   } else if (clampedValue <= -1) {
-    // Bleu moyen
     return `rgba(60, 160, 255, ${baseOpacity + 0.08})`
   } else if (clampedValue <= -0.5) {
-    // Bleu clair / cyan
     return `rgba(120, 200, 255, ${baseOpacity})`
   } else if (clampedValue < 0.5) {
-    // Neutre (quasi invisible)
     return `rgba(255, 255, 255, ${baseOpacity - 0.3})`
   } else if (clampedValue < 1) {
-    // Jaune pâle
     return `rgba(255, 245, 120, ${baseOpacity})`
   } else if (clampedValue < 1.5) {
-    // Jaune
     return `rgba(255, 220, 80, ${baseOpacity + 0.05})`
   } else if (clampedValue < 2) {
-    // Jaune-orange
     return `rgba(255, 190, 50, ${baseOpacity + 0.08})`
   } else if (clampedValue < 2.5) {
-    // Orange
     return `rgba(255, 140, 30, ${baseOpacity + 0.12})`
   } else if (clampedValue < 3) {
-    // Orange foncé
     return `rgba(240, 100, 20, ${baseOpacity + 0.15})`
   } else if (clampedValue < 4) {
-    // Rouge-orange
     return `rgba(220, 60, 20, ${baseOpacity + 0.18})`
   } else {
-    // Rouge intense (chaud extrême)
     return `rgba(180, 20, 40, ${baseOpacity + 0.22})`
   }
 }

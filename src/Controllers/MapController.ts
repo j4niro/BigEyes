@@ -68,7 +68,8 @@ export class MapController {
   }
 
   private addLatitude(lat: number): void {
-    const roundedLat = Math.round(lat / 4) * 4
+    //const roundedLat = Math.round(lat / 4) * 4
+    const roundedLat = Math.round(lat)
     const clampedLat = Math.max(-88, Math.min(88, roundedLat))
 
     const latitude: Latitude = {
@@ -81,7 +82,7 @@ export class MapController {
 
   convertMapYToLatitude(y: number, mapHeight: number): number {
     const lat = 90 - (y / mapHeight) * 180
-    return Math.round(lat / 4) * 4
+    return lat 
   }
 
   convertLatitudeToMapY(lat: number, mapHeight: number): number {
@@ -116,7 +117,7 @@ export class MapController {
   }
 
   /**
-   * NOUVELLE FONCTION : Palette de couleurs améliorée
+   * Palette de couleurs 
    */
   getColorForAnomaly(value: number | null): string {
     if (value === null) return 'rgba(128, 128, 128, 0.2)' // Gris transparent
@@ -140,7 +141,7 @@ export class MapController {
   }
 
   /**
-   * NOUVELLE FONCTION : Calcule la taille de cellule optimale
+   * Calcule la taille de cellule optimale
    */
   getCellDimensions(mapWidth: number, mapHeight: number) {
     // Grille 4x4 : 90 cellules en largeur (360/4), 45 en hauteur (180/4)
