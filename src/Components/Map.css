@@ -318,3 +318,135 @@
     max-width: 100%;
   }
 }
+
+/* Modal de nommage d'aire */
+.area-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.area-modal {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  min-width: 320px;
+  font-family: 'montserrat', sans-serif;
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #2d2d2d;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  font-family: 'montserrat', sans-serif;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: #4ECDC4;
+}
+
+.modal-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #2d2d2d;
+}
+
+.modal-checkbox input {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.modal-color-picker {
+  margin-bottom: 16px;
+}
+
+.modal-color-label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.modal-colors {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.modal-color-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.modal-color-dot:hover {
+  transform: scale(1.1);
+}
+
+.modal-color-dot.selected {
+  border-color: #2d2d2d;
+  transform: scale(1.15);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-btn-save,
+.modal-btn-skip {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-family: 'montserrat', sans-serif;
+}
+
+.modal-btn-save {
+  background-color: #27ae60;
+  color: white;
+}
+
+.modal-btn-save:hover {
+  background-color: #229954;
+}
+
+.modal-btn-skip {
+  background-color: #95a5a6;
+  color: white;
+}
+
+.modal-btn-skip:hover {
+  background-color: #7f8c8d;
+}

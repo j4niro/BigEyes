@@ -1,9 +1,10 @@
-// components/AnomalyCanvas.tsx 
+// components/AnomalyCanvas.tsx - VERSION AVEC INTERPOLATION TEMPORELLE
 import React, { useRef, useEffect } from 'react'
 import type { TempAnomalyData } from '../Redux/Slice/DataSlice'
 
 interface AnomalyCanvasProps {
   year: number
+  yearProgress?: number // Progression entre l'année actuelle et la suivante (0-1)
   tempData: TempAnomalyData
   width: number
   height: number
@@ -12,6 +13,7 @@ interface AnomalyCanvasProps {
 
 export const AnomalyCanvas: React.FC<AnomalyCanvasProps> = ({
   year,
+  yearProgress = 0,
   tempData,
   width,
   height,
@@ -21,13 +23,11 @@ export const AnomalyCanvas: React.FC<AnomalyCanvasProps> = ({
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null)
   const earthImageRef = useRef<HTMLImageElement | null>(null)
 
-  // Précharger l'image de la Terre une seule fois
   useEffect(() => {
     const earthImage = new Image()
     earthImage.src = earthImageSrc
     earthImage.onload = () => {
       earthImageRef.current = earthImage
-      // Dessiner la Terre une seule fois
       if (canvasRef.current) {
         const ctx = canvasRef.current.getContext('2d')
         if (ctx) {
@@ -38,44 +38,52 @@ export const AnomalyCanvas: React.FC<AnomalyCanvasProps> = ({
     }
   }, [earthImageSrc, width, height])
 
-  // Redessiner uniquement les anomalies quand l'année change
   useEffect(() => {
     if (!overlayCanvasRef.current || width === 0 || height === 0) return
 
     const overlayCanvas = overlayCanvasRef.current
     const overlayCtx = overlayCanvas.getContext('2d', { 
       alpha: true,
-      desynchronized: true // Optimisation pour animations
+      desynchronized: true
     })
     if (!overlayCtx) return
 
-    // Effacer le canvas overlay
     overlayCtx.clearRect(0, 0, width, height)
 
-    const dataMap = createDataMap(tempData, year)
+    // Créer les maps pour l'année actuelle et la suivante
+    const dataMapCurrent = createDataMap(tempData, year)
+    const dataMapNext = createDataMap(tempData, year + 1)
 
-    // Résolution réduite pour plus de fluidité pendant l'animation
     const resolution = 3
     const cols = 90 * resolution
     const rows = 45 * resolution
     const cellWidth = width / cols
     const cellHeight = height / rows
 
-    // Utiliser requestAnimationFrame pour un rendu plus fluide
     requestAnimationFrame(() => {
       for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
           const lon = -180 + ((col + 0.5) / cols) * 360
           const lat = 90 - ((row + 0.5) / rows) * 180
 
-          const result = interpolateValueSmartly(dataMap, lat, lon)
-          
-          if (!result.hasData || Math.abs(result.value) < 0.1) continue
+          // Interpoler les valeurs entre l'année actuelle et la suivante
+          const resultCurrent = interpolateValueSmartly(dataMapCurrent, lat, lon)
+          const resultNext = interpolateValueSmartly(dataMapNext, lat, lon)
+
+          if (!resultCurrent.hasData && !resultNext.hasData) continue
+
+          // Interpolation temporelle entre les deux années
+          const valueCurrent = resultCurrent.hasData ? resultCurrent.value : 0
+          const valueNext = resultNext.hasData ? resultNext.value : valueCurrent
+          const interpolatedValue = valueCurrent + (valueNext - valueCurrent) * yearProgress
+
+          if (Math.abs(interpolatedValue) < 0.1) continue
 
           const x = col * cellWidth
           const y = row * cellHeight
 
-          const color = getColorForValue(result.value, result.confidence)
+          const avgConfidence = (resultCurrent.confidence + resultNext.confidence) / 2
+          const color = getColorForValue(interpolatedValue, avgConfidence)
           overlayCtx.fillStyle = color
           overlayCtx.fillRect(
             Math.floor(x), 
@@ -86,11 +94,10 @@ export const AnomalyCanvas: React.FC<AnomalyCanvasProps> = ({
         }
       }
     })
-  }, [year, tempData, width, height])
+  }, [year, yearProgress, tempData, width, height])
 
   return (
     <>
-      {/* Canvas 1 : Terre (NET, dessiné une seule fois) */}
       <canvas
         ref={canvasRef}
         width={width}
@@ -106,7 +113,6 @@ export const AnomalyCanvas: React.FC<AnomalyCanvasProps> = ({
         }}
       />
       
-      {/* Canvas 2 : Anomalies (mis à jour à chaque année) */}
       <canvas
         ref={overlayCanvasRef}
         width={width}
@@ -121,7 +127,7 @@ export const AnomalyCanvas: React.FC<AnomalyCanvasProps> = ({
           zIndex: 6,
           filter: 'blur(2.5px)',
           opacity: 0.75,
-          willChange: 'contents' // Optimisation CSS
+          willChange: 'contents'
         }}
       />
     </>

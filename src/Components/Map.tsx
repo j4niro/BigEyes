@@ -18,18 +18,20 @@ export const Map = () => {
   const tempData = useAppSelector(state => state.data.tempData)
   const selectedLatitudes = useAppSelector(state => state.globalState.selectedLatitudes)
   const selectedAreas = useAppSelector(state => state.globalState.selectedAreas)
+  const areaGroups = useAppSelector(state => state.globalState.areaGroups)
   const yearRange = useAppSelector(state => state.globalState.yearRange)
   const currentSelectionMode = useAppSelector(state => state.globalState.currentSelectionMode)
 
   const mapRef = useRef<HTMLDivElement>(null)
   const [currentYear, setCurrentYear] = useState(yearRange.start)
+  const [yearProgress, setYearProgress] = useState(0)
   const [mapDimensions, setMapDimensions] = useState({ width: 0, height: 0 })
   
   const [dragStart, setDragStart] = useState<{x: number, y: number} | null>(null)
   const [dragCurrent, setDragCurrent] = useState<{x: number, y: number} | null>(null)
 
   const [isPlaying, setIsPlaying] = useState(false)
-  const [speed, setSpeed] = useState<1 | 2 | 5 | 10>(1)
+  const [speed, setSpeed] = useState<1 | 1.5 | 2>(1)
   const [showSpeedMenu, setShowSpeedMenu] = useState(false)
 
   const mapController = useMemo(() => new MapController(dispatch), [dispatch])
@@ -111,8 +113,9 @@ export const Map = () => {
       setIsPlaying(false)
     } else {
       setIsPlaying(true)
-      animationController.play(currentYear, (year) => {
+      animationController.play(currentYear, (year, progress) => {
         setCurrentYear(year)
+        setYearProgress(progress)
       })
     }
   }
@@ -149,14 +152,15 @@ export const Map = () => {
     animationController.goToEnd()
   }
 
-  const handleSpeedChange = (newSpeed: 1 | 2 | 5 | 10) => {
+  const handleSpeedChange = (newSpeed : 1 | 1.5 | 2) => {
     setSpeed(newSpeed)
     animationController.setSpeed(newSpeed)
     setShowSpeedMenu(false)
     if (isPlaying) {
       animationController.pause()
-      animationController.play(currentYear, (year) => {
+      animationController.play(currentYear, (year, progress) => {
         setCurrentYear(year)
+        setYearProgress(progress)
       })
     }
   }
@@ -181,7 +185,6 @@ export const Map = () => {
     return grads
   }, [])
 
-  // Données pour la légende
   const legendData = [
     { label: '< -3°C', color: 'rgb(0, 10, 100)' },
     { label: '-2.5°C', color: 'rgb(0, 40, 160)' },
@@ -216,6 +219,7 @@ export const Map = () => {
         {mapDimensions.width > 0 && (
           <AnomalyCanvas
             year={currentYear}
+            yearProgress={yearProgress}
             tempData={tempData}
             width={mapDimensions.width}
             height={mapDimensions.height}
@@ -249,7 +253,7 @@ export const Map = () => {
                 top: `${y}px`,
                 left: 0,
                 right: 0,
-                height: '2px',
+                height: '1px',
                 backgroundColor: '#FF4444',
                 boxShadow: '0 0 8px rgba(255, 68, 68, 0.8)',
                 pointerEvents: 'none',
@@ -259,23 +263,28 @@ export const Map = () => {
           )
         })}
 
-        {selectedAreas.map(area => (
-          <div
-            key={area.id}
-            style={{
-              position: 'absolute',
-              left: `${area.topLeft.x}px`,
-              top: `${area.topLeft.y}px`,
-              width: `${area.bottomRight.x - area.topLeft.x}px`,
-              height: `${area.bottomRight.y - area.topLeft.y}px`,
-              border: '2px solid #00FF00',
-              backgroundColor: 'rgba(0, 255, 0, 0.15)',
-              boxShadow: '0 0 10px rgba(0, 255, 0, 0.6)',
-              pointerEvents: 'none',
-              zIndex: 20
-            }}
-          />
-        ))}
+        {selectedAreas.map(area => {
+          const group = areaGroups.find(g => g.id === area.groupId)
+          const borderColor = group ? group.color : '#00FF00'
+          
+          return (
+            <div
+              key={area.id}
+              style={{
+                position: 'absolute',
+                left: `${area.topLeft.x}px`,
+                top: `${area.topLeft.y}px`,
+                width: `${area.bottomRight.x - area.topLeft.x}px`,
+                height: `${area.bottomRight.y - area.topLeft.y}px`,
+                border: `2px solid ${borderColor}`,
+                backgroundColor: group ? `${borderColor}20` : 'rgba(0, 255, 0, 0.15)',
+                boxShadow: `0 0 10px ${borderColor}99`,
+                pointerEvents: 'none',
+                zIndex: 20
+              }}
+            />
+          )
+        })}
 
         {dragStart && dragCurrent && (
           <div
@@ -294,7 +303,7 @@ export const Map = () => {
           />
         )}
 
-        {/* Légende des couleurs */}
+        {/* Légende */}
         <div
           style={{
             position: 'absolute',
@@ -395,10 +404,10 @@ export const Map = () => {
                 zIndex: 100
               }}
             >
-              {[1, 2, 5, 10].map(s => (
+              {[1, 1.5, 2].map(s => (
                 <button
                   key={s}
-                  onClick={() => handleSpeedChange(s as 1 | 2 | 5 | 10)}
+                  onClick={() => handleSpeedChange(s as 1 | 1.5 | 2)}
                   style={{
                     display: 'block',
                     width: '100%',

@@ -1,3 +1,4 @@
+/* SettingPan.css */
 .container-settingPan {
     width: 150px;
     background-color: #899785;
@@ -8,7 +9,6 @@
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
 }
 
-/* Header */
 .header {
     background-color: #899785;
     color: white;
@@ -18,7 +18,6 @@
     border-radius: 4px 4px 0 0;
 }
 
-/* Section */
 .section {
     padding: 12px;
     background-color: #899785;
@@ -32,7 +31,6 @@
     font-weight: 500;
 }
 
-/* Year Input */
 .year-input {
     width: 100%;
     padding: 6px 8px;
@@ -52,7 +50,6 @@
     border-color: #5a6b56;
 }
 
-/* Latitude Input with Button */
 .input-with-button {
     display: flex;
     gap: 6px;
@@ -100,13 +97,14 @@
 .add-button:active {
     background-color: #3a4b36;
 }
+
 .mode-buttons-section {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 15px;
 }
-/* Mode Buttons */
+
 .mode-button {
     width: 90%;
     padding: 8px 8px;
@@ -119,6 +117,10 @@
     justify-content: center;
     font-weight: 500;
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 .mode-button:hover {
@@ -135,9 +137,15 @@
     align-items: center;
 }
 
-/* Selections Counter */
+/* Dropdown des sélections */
+.selections-dropdown-container {
+    position: relative;
+    width: 90%;
+    margin-bottom: 10px;
+}
+
 .selections-counter {
-    width: 75%;
+    width: 100%;
     background-color: white;
     padding: 10px 12px;
     display: flex;
@@ -146,13 +154,25 @@
     font-size: 12px;
     color: black;
     border-radius: 4px;
-    margin-bottom: 10px;
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-family: "montserrat";
+}
+
+.selections-counter:hover {
+    background-color: #f5f5f5;
 }
 
 .counter-icon {
     font-size: 10px;
     color: black;
+    transition: transform 0.2s;
+}
+
+.selections-counter:hover .counter-icon {
+    transform: translateY(2px);
 }
 
 .counter-text {
@@ -173,8 +193,335 @@
     font-weight: 600;
 }
 
+/* Dropdown content avec scroll - VERSION CORRIGÉE */
+.selections-dropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    width: 280px; /* Largeur fixe plus grande */
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    max-height: 200px; /* Hauteur maximale augmentée */
+    overflow-y: scroll; /* Force le scroll visible */
+    overflow-x: hidden; /* Pas de scroll horizontal */
+}
+
+/* Style de la scrollbar pour webkit (Chrome, Safari, Edge) */
+.selections-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+.selections-dropdown::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 0 4px 4px 0;
+}
+
+.selections-dropdown::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.selections-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Bouton créer groupe dans dropdown */
+.create-group-btn-dropdown {
+    width: calc(100% - 16px);
+    margin: 8px;
+    padding: 6px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: "montserrat";
+}
+
+.create-group-btn-dropdown:hover {
+    background-color: #2980b9;
+}
+
+/* Formulaire création groupe */
+.create-group-form-dropdown {
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.group-name-input-dropdown {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 11px;
+    margin-bottom: 8px;
+    box-sizing: border-box;
+    font-family: "montserrat";
+}
+
+.color-picker-dropdown {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.color-dot-dropdown {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.2s;
+}
+
+.color-dot-dropdown:hover {
+    transform: scale(1.1);
+}
+
+.color-dot-dropdown.selected {
+    border-color: #2c3e50;
+    transform: scale(1.15);
+}
+
+.form-actions-dropdown {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-save-dropdown, .btn-cancel-dropdown {
+    flex: 1;
+    padding: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: "montserrat";
+}
+
+.btn-save-dropdown {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-save-dropdown:hover {
+    background-color: #229954;
+}
+
+.btn-cancel-dropdown {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.btn-cancel-dropdown:hover {
+    background-color: #7f8c8d;
+}
+
+.dropdown-section {
+    padding: 8px 0;
+}
+
+.dropdown-section + .dropdown-section {
+    border-top: 1px solid #e0e0e0;
+}
+
+.dropdown-header {
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+}
+
+.selection-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.selection-item:hover {
+    background-color: #f5f5f5;
+}
+
+.selection-label {
+    flex: 1;
+    color: #2d2d2d;
+    font-weight: 500;
+}
+
+.remove-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.remove-btn:hover {
+    background-color: #c0392b;
+}
+
+/* Groupes dans dropdown */
+.group-item {
+    margin-bottom: 4px;
+}
+
+.group-header-dropdown {
+    padding: 6px 10px;
+    background-color: #f1f3f5;
+    border-left: 3px solid;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 3px;
+}
+
+.group-name-dropdown {
+    font-size: 11px;
+    font-weight: 600;
+    color: #2d2d2d;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.area-in-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 10px 4px 20px;
+    font-size: 10px;
+    background-color: #f8f9fa;
+    gap: 4px;
+}
+
+.area-label {
+    flex: 1;
+    color: #2d2d2d;
+}
+
+.area-label-editable {
+    flex: 1;
+    color: #2d2d2d;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 2px;
+    transition: background-color 0.2s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.area-label-editable:hover {
+    background-color: #e9ecef;
+}
+
+.area-name-edit-input {
+    flex: 1;
+    padding: 2px 4px;
+    border: 1px solid #3498db;
+    border-radius: 3px;
+    font-size: 10px;
+    font-family: "montserrat";
+}
+
+.ungroup-btn-small {
+    background-color: #f39c12;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 2px 5px;
+    cursor: pointer;
+    font-size: 9px;
+    flex-shrink: 0;
+}
+
+.ungroup-btn-small:hover {
+    background-color: #e67e22;
+}
+
+.remove-btn-small {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.remove-btn-small:hover {
+    background-color: #c0392b;
+}
+
+/* Aires non groupées */
+.selection-item-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px;
+    font-size: 11px;
+    transition: background-color 0.2s;
+    gap: 6px;
+}
+
+.selection-item-area:hover {
+    background-color: #f5f5f5;
+}
+
+.group-select-small {
+    padding: 2px 4px;
+    border: 1px solid #bdc3c7;
+    border-radius: 3px;
+    font-size: 9px;
+    cursor: pointer;
+    font-family: "montserrat";
+    background-color: white;
+    flex-shrink: 0;
+}
+
+.error-message {
+    margin-top: 6px;
+    padding: 6px;
+    background-color: #ffe6e6;
+    color: #c0392b;
+    border-radius: 4px;
+    font-size: 11px;
+}
 
 input[type="number"] {
     -moz-appearance: textfield;
+}
 
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
