@@ -304,46 +304,57 @@ export const Map = () => {
         )}
 
         {/* Légende */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '10px',
-            right: '10px',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            padding: '12px',
-            borderRadius: '8px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
-            zIndex: 30,
-            fontSize: '11px',
-            fontFamily: 'montserrat, sans-serif',
-            color:'black'
-          }}
-        >
-          <div style={{ 
-            fontWeight: 'bold', 
-            marginBottom: '8px', 
-            fontSize: '12px',
-            textAlign: 'center'
-          }}>
-            Anomalie de température
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-            {legendData.map((item, index) => (
-              <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div
-                  style={{
-                    width: '20px',
-                    height: '12px',
-                    backgroundColor: item.color,
-                    border: '1px solid rgba(0, 0, 0, 0.2)',
-                    borderRadius: '2px'
-                  }}
-                />
-                <span style={{ minWidth: '50px' }}>{item.label}</span>
-              </div>
-            ))}
-          </div>
+          <div
+      style={{
+        position: 'absolute',
+        bottom: '5px', // Juste au-dessus du slider
+        left: '20px',
+        right: '20px',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        padding: '5px 12px',
+        borderRadius: '4px',
+        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
+        zIndex: 30,
+        fontSize: '9px',
+        fontFamily: 'montserrat, sans-serif',
+        color:'black',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        flexWrap: 'wrap',
+        width: 'fit-content',
+      }}
+    >
+      <span style={{ 
+        fontWeight: 'bold', 
+        fontSize: '10px',
+        whiteSpace: 'nowrap',
+        marginRight: '4px'
+      }}>
+        Anomalie:
+      </span>
+      
+      {legendData.map((item, index) => (
+        <div key={index} style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '3px',
+          whiteSpace: 'nowrap'
+        }}>
+          <div
+            style={{
+              width: '12px',
+              height: '12px',
+              backgroundColor: item.color,
+              border: '1px solid rgba(0, 0, 0, 0.2)',
+              borderRadius: '2px',
+              flexShrink: 0
+            }}
+          />
+          <span style={{ fontSize: '8px' }}>{item.label}</span>
         </div>
+      ))}
+    </div>
       </div>
 
       <div className='year-navigation'>

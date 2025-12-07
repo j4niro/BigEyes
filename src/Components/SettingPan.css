@@ -196,7 +196,7 @@
 /* Dropdown content avec scroll - VERSION CORRIGÉE */
 .selections-dropdown {
     position: absolute;
-    top: calc(100% + 5px);
+    bottom: calc(100% + 5px);
     left: 0;
     width: 280px; /* Largeur fixe plus grande */
     background-color: white;
@@ -204,7 +204,7 @@
     border-radius: 4px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     z-index: 100;
-    max-height: 200px; /* Hauteur maximale augmentée */
+    max-height: 400px; /* Hauteur maximale augmentée */
     overflow-y: scroll; /* Force le scroll visible */
     overflow-x: hidden; /* Pas de scroll horizontal */
 }
