@@ -10,6 +10,7 @@ function App() {
   const dispatch = useAppDispatch();
   const data = useAppSelector((state) => state.data.tempData);
   const mapSize = useAppSelector((state)=> state.data.mapSize);
+   const mapHeight = useAppSelector((state) => state.globalState.mapHeight)
 
   useEffect(() => {
     dispatch(loadEarthImage());
@@ -19,7 +20,10 @@ function App() {
 
   return (
       <div className="app-container">
-        <div className='setting-pan-wrapper'>
+        <div 
+        className='setting-pan-wrapper'
+        style={{ maxHeight: `${mapHeight - 40}px`, overflowY: 'auto' }}
+        >
               <SettingPan />
         </div>
         <Map />

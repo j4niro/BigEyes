@@ -4,6 +4,7 @@ body {
     box-sizing: border-box;
     font-family: "montserrat";
     /*background-color: white;*/
+    overflow: hidden;
 }
 
 
@@ -13,11 +14,30 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .setting-pan-wrapper {
   position: absolute;
-  top: 200px;
+  top: 100px;
   left: 20px;
   z-index: 100;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: max-height 0.2s ease-out;
+}
+
+/* Scrollbar pour SettingPan si nécessaire */
+.setting-pan-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.setting-pan-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.setting-pan-wrapper::-webkit-scrollbar-thumb {
+  background: #899785;
+  border-radius: 3px;
 }

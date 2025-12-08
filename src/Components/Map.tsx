@@ -11,7 +11,7 @@ import start from '../../public/Play_button_arrowhead.png'
 import gostart from '../../public/gostart_button.png'
 import goend from '../../public/goend_button.png'
 import earthImage from '../../public/earth.png'
-import { setYearRange } from '../Redux/Slice/GlobalSlice'
+import { setYearRange, setMapHeight } from '../Redux/Slice/GlobalSlice'
 
 export const Map = () => {
   const dispatch = useAppDispatch()
@@ -21,8 +21,9 @@ export const Map = () => {
   const areaGroups = useAppSelector(state => state.globalState.areaGroups)
   const yearRange = useAppSelector(state => state.globalState.yearRange)
   const currentSelectionMode = useAppSelector(state => state.globalState.currentSelectionMode)
+  const mapHeight = useAppSelector(state => state.globalState.mapHeight) 
 
-  const mapRef = useRef<HTMLDivElement>(null)
+  const mapWrapperRef = useRef<HTMLDivElement>(null)
   const [currentYear, setCurrentYear] = useState(yearRange.start)
   const [yearProgress, setYearProgress] = useState(0)
   const [mapDimensions, setMapDimensions] = useState({ width: 0, height: 0 })
@@ -33,6 +34,9 @@ export const Map = () => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [speed, setSpeed] = useState<1 | 1.5 | 2>(1)
   const [showSpeedMenu, setShowSpeedMenu] = useState(false)
+
+  // État pour le resize
+  const [isResizing, setIsResizing] = useState(false)
 
   const mapController = useMemo(() => new MapController(dispatch), [dispatch])
   const animationController = useMemo(() => new AnimationController(dispatch), [dispatch])
@@ -45,25 +49,59 @@ export const Map = () => {
     setCurrentYear(yearRange.start)
   }, [yearRange.start])
 
+  // Mettre à jour les dimensions du canvas
   useEffect(() => {
-    if (mapRef.current) {
+    if (mapWrapperRef.current) {
       const updateDimensions = () => {
+        const rect = mapWrapperRef.current!.getBoundingClientRect()
         setMapDimensions({
-          width: mapRef.current!.clientWidth,
-          height: mapRef.current!.clientHeight
+          width: rect.width,
+          height: rect.height
         })
       }
+      
       updateDimensions()
-      window.addEventListener('resize', updateDimensions)
-      return () => window.removeEventListener('resize', updateDimensions)
+      
+      const resizeObserver = new ResizeObserver(updateDimensions)
+      resizeObserver.observe(mapWrapperRef.current)
+      
+      return () => resizeObserver.disconnect()
     }
-  }, [])
+  }, [mapHeight])
 
   useEffect(() => {
     return () => {
       animationController.cleanup()
     }
   }, [animationController])
+
+  // Gestion du resize
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsResizing(true)
+  }
+
+  useEffect(() => {
+    if (!isResizing) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newHeight = e.clientY
+      dispatch(setMapHeight(newHeight))
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing, dispatch])
 
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const year = parseInt(e.target.value)
@@ -72,16 +110,16 @@ export const Map = () => {
   }
 
   const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!mapRef.current) return
-    const rect = mapRef.current.getBoundingClientRect()
+    if (!mapWrapperRef.current) return
+    const rect = mapWrapperRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
     mapController.handleMapClick(x, y, mapDimensions.width, mapDimensions.height)
   }
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!mapRef.current || currentSelectionMode !== 'area') return
-    const rect = mapRef.current.getBoundingClientRect()
+    if (!mapWrapperRef.current || currentSelectionMode !== 'area') return
+    const rect = mapWrapperRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
     setDragStart({ x, y })
@@ -90,16 +128,16 @@ export const Map = () => {
   }
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!mapRef.current || !dragStart || currentSelectionMode !== 'area') return
-    const rect = mapRef.current.getBoundingClientRect()
+    if (!mapWrapperRef.current || !dragStart || currentSelectionMode !== 'area') return
+    const rect = mapWrapperRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
     setDragCurrent({ x, y })
   }
 
   const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!mapRef.current) return
-    const rect = mapRef.current.getBoundingClientRect()
+    if (!mapWrapperRef.current) return
+    const rect = mapWrapperRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
     mapController.handleMouseUp(x, y, mapDimensions.width, mapDimensions.height)
@@ -202,10 +240,10 @@ export const Map = () => {
   ]
 
   return (
-    <div className='map-container'>
+    <div className='map-container' style={{ height: `${mapHeight}px` }}>
       <div 
         className='map-wrapper'
-        ref={mapRef}
+        ref={mapWrapperRef}
         onClick={handleMapClick}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -216,7 +254,7 @@ export const Map = () => {
         }}
         style={{ cursor: currentSelectionMode ? 'crosshair' : 'default' }}
       >
-        {mapDimensions.width > 0 && (
+        {mapDimensions.width > 0 && mapDimensions.height > 0 && (
           <AnomalyCanvas
             year={currentYear}
             yearProgress={yearProgress}
@@ -303,58 +341,58 @@ export const Map = () => {
           />
         )}
 
-        {/* Légende */}
-          <div
-      style={{
-        position: 'absolute',
-        bottom: '5px', // Juste au-dessus du slider
-        left: '20px',
-        right: '20px',
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        padding: '5px 12px',
-        borderRadius: '4px',
-        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
-        zIndex: 30,
-        fontSize: '9px',
-        fontFamily: 'montserrat, sans-serif',
-        color:'black',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        flexWrap: 'wrap',
-        width: 'fit-content',
-      }}
-    >
-      <span style={{ 
-        fontWeight: 'bold', 
-        fontSize: '10px',
-        whiteSpace: 'nowrap',
-        marginRight: '4px'
-      }}>
-        Anomalie:
-      </span>
-      
-      {legendData.map((item, index) => (
-        <div key={index} style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '3px',
-          whiteSpace: 'nowrap'
-        }}>
-          <div
-            style={{
-              width: '12px',
-              height: '12px',
-              backgroundColor: item.color,
-              border: '1px solid rgba(0, 0, 0, 0.2)',
-              borderRadius: '2px',
-              flexShrink: 0
-            }}
-          />
-          <span style={{ fontSize: '8px' }}>{item.label}</span>
+        {/* Légende horizontale */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '80px',
+            //left: '20px',
+            right: '20px',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            padding: '5px 12px',
+            borderRadius: '4px',
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
+            zIndex: 30,
+            fontSize: '9px',
+            fontFamily: 'montserrat, sans-serif',
+            color:'black',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            flexWrap: 'wrap',
+            maxWidth: 'fit-content',
+          }}
+        >
+          <span style={{ 
+            fontWeight: 'bold', 
+            fontSize: '10px',
+            whiteSpace: 'nowrap',
+            marginRight: '4px'
+          }}>
+            Anomalie:
+          </span>
+          
+          {legendData.map((item, index) => (
+            <div key={index} style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '3px',
+              whiteSpace: 'nowrap'
+            }}>
+              <div
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  backgroundColor: item.color,
+                  border: '1px solid rgba(0, 0, 0, 0.2)',
+                  borderRadius: '2px',
+                  flexShrink: 0
+                }}
+              />
+              <span style={{ fontSize: '8px' }}>{item.label}</span>
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
       </div>
 
       <div className='year-navigation'>
@@ -458,6 +496,16 @@ export const Map = () => {
         <button className='control-section zoom-section'>
           Zoom
         </button>
+      </div>
+
+      {/*BARRE DE RESIZE */}
+      <div 
+        className='map-resize-handle'
+        onMouseDown={handleResizeMouseDown}
+        style={{ cursor: 'ns-resize' }}
+      >
+        <div className='resize-bar' />
+        <span className='resize-label'>Resize Map</span>
       </div>
     </div>
   )

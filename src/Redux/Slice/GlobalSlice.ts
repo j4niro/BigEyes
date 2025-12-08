@@ -42,6 +42,7 @@ export type GlobalState = {
     currentLatId:number|null,
     currentSelectionMode: SelectionMode,
     nextGroupId: number,
+    mapHeight: number,
 }
 
 const initialState: GlobalState = {
@@ -53,6 +54,7 @@ const initialState: GlobalState = {
     currentLatId: null,
     currentSelectionMode: null,
     nextGroupId: 1,
+    mapHeight : 600,
 }
 
 const globalSlice = createSlice({
@@ -170,6 +172,11 @@ const globalSlice = createSlice({
                 group.name = action.payload.name;
             }
         },
+
+        setMapHeight: (state, action: PayloadAction<number>) => {
+            const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 900;
+            state.mapHeight = Math.max(300, Math.min(action.payload, windowHeight - 100));
+        }
     }
 })
 
@@ -186,6 +193,7 @@ export const {
     removeAreaFromGroup,
     deleteGroup,
     updateGroupName,
+    setMapHeight,
 } = globalSlice.actions
 
 export default globalSlice.reducer
