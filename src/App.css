@@ -5,6 +5,14 @@ body {
     font-family: "montserrat";
     /*background-color: white;*/
     overflow: hidden;
+
+}
+
+#root {
+  max-width: 1280px;
+  text-align: center;
+  margin: 0;
+  width: 100%;
 }
 
 
@@ -41,3 +49,28 @@ body {
   background: #899785;
   border-radius: 3px;
 }
+
+.read-the-docs {
+  color: #888;
+}
+
+
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 1vw;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+

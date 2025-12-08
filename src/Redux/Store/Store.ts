@@ -13,7 +13,8 @@ export const store = configureStore({
             serializableCheck: false, 
             immutableCheck: false,    
         }),
-})
+    }
+)
 
 export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch

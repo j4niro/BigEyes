@@ -1,0 +1,72 @@
+.graph-area{
+    background-color: white;
+    border: 1px solid white;
+    border-radius: 5px;
+
+    width: 500px;
+    height: 250px;
+
+    margin-left: 15px;
+}
+
+.histogram-area{
+    background-color: white;
+    border: 1px solid white;
+    border-radius: 5px;
+
+    width: 500px;
+    height: 250px;
+
+    margin-left: 15px;
+}
+
+/* --- MISE A JOUR DU BOUTON EXISTANT --- */
+.view-button {
+  /* ... tes styles existants (background, border, etc.) ... */
+  position: relative; /* INDISPENSABLE pour ancrer le tooltip */
+}
+
+
+/* --- NOUVEAU STYLE POUR LE TOOLTIP --- */
+.view-tooltip {
+  position: absolute;
+  left: 100%; /* Place le tooltip à droite du bouton */
+  top: 50%;
+  transform: translateY(-50%); /* Centre verticalement */
+  
+  margin-left: 12px; /* Espace entre le bouton et le tooltip */
+  width: 180px;      /* Largeur fixe pour le texte */
+  padding: 8px 12px;
+  
+  background-color: #4a5d50; /* Vert foncé (cohérent avec ta charte) */
+  color: white;
+  font-size: 11px;
+  font-weight: 400;
+  text-align: left;
+  line-height: 1.4;
+  
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  pointer-events: none; /* Permet de cliquer "à travers" si besoin */
+  z-index: 2000; /* Au-dessus de tout le reste */
+  
+  /* Animation d'apparition douce */
+  animation: fadeInTooltip 0.2s ease-in-out;
+}
+
+/* La petite flèche triangulaire à gauche du tooltip */
+.view-tooltip::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 6px 6px 6px 0;
+  border-style: solid;
+  border-color: transparent #4a5d50 transparent transparent;
+}
+
+@keyframes fadeInTooltip {
+  from { opacity: 0; transform: translate(-10px, -50%); }
+  to { opacity: 1; transform: translate(0, -50%); }
+}

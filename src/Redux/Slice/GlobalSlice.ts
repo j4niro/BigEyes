@@ -1,19 +1,15 @@
-// Redux/Slice/GlobalSlice.ts
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-export type Dot = {
-    x: number,
-    y: number,
-}
+import type { TempAnomalyArea } from "./DataSlice";
 
 export type Latitude = {
     id: number,
     lat: number,
 }
 
-export type YearRange = {
-    start:number,
-    end:number,
+export type Dot = {
+    x: number,
+    y: number,
 }
 
 export type Area = {
@@ -33,26 +29,80 @@ export type AreaGroup = {
 
 export type SelectionMode = 'latitude' | 'area' | null
 
+export type viewDisposition = {
+  position: "top-left-graph" | "bottom-left-graph";
+  id: number;
+};
+
+export const TWORAWS: viewDisposition[] = [
+  { position: "top-left-graph",    id: 0 },
+  { position: "top-left-graph",    id: 1 },
+  { position: "bottom-left-graph", id: 2 },
+  { position: "bottom-left-graph", id: 3 },
+];
+
+export type ONERAWS = {
+  disposition: viewDisposition[];
+};
+
+export type viewsDisposition = {
+  disposition: viewDisposition[];
+};
+
+
+
+export type YearRange = { // if start === end then only one year is selected
+    start:number,
+    end:number,
+}
+
 export type GlobalState = {
-    selectedLatitudes : Array<Latitude>,
-    yearRange : YearRange,
-    selectedAreas : Array<Area>,
-    areaGroups: Array<AreaGroup>,
     currentAreaId:number|null,
     currentLatId:number|null,
+
     currentSelectionMode: SelectionMode,
-    nextGroupId: number,
+
     mapHeight: number,
+
+    yearRange : YearRange,
+    currentYear : number,
+
+    selectedAreasResolved : Array<TempAnomalyArea>,
+    selectedAreas : Array<Area>,
+
+    areaGroups: Array<AreaGroup>,
+    nextGroupId: number,
+
+    currentArea:TempAnomalyArea|null,
+
+    currentLat:number,
+    // selectedLatitudes : Array<number>,
+    selectedLatitudes : Array<Latitude>,
+    selectedLatitudesVersion : number,
+    currentLong:number,
+
+    viewsDisposition?:string,
 }
 
 const initialState: GlobalState = {
-    selectedLatitudes : [],
-    yearRange : {start:1880, end:2025},
+    
+    yearRange : {start:1880, end:2025}, 
+    currentYear: 2020,
+
     selectedAreas : [],
-    areaGroups: [],
-    currentAreaId: null,
-    currentLatId: null,
+    selectedAreasResolved : [],
+    currentArea: null,
+
+    selectedLatitudes : [],
+    currentLat: 0,
+    currentLong: 0,
+    selectedLatitudesVersion : 0,
+
     currentSelectionMode: null,
+
+    currentLatId: null,
+    currentAreaId: null,
+    areaGroups: [],
     nextGroupId: 1,
     mapHeight : 600,
 }
@@ -60,12 +110,13 @@ const initialState: GlobalState = {
 const globalSlice = createSlice({
     name : 'global',
     initialState : initialState,
-    reducers: {
+    reducers: { //TODO: manage the reducers according to the data structure we decide to use 
         addLatitudeSelected : (state, action:PayloadAction<Latitude>)=>{
             state.selectedLatitudes.push({...action.payload});
             state.currentLatId = state.selectedLatitudes.length-1;
             state.selectedLatitudes[state.currentLatId].id = state.currentLatId;
         },
+
 
         deleteLatitudeSelected : (state, action:PayloadAction<number>)=>{
             const id = action.payload;
@@ -86,6 +137,10 @@ const globalSlice = createSlice({
             state.selectedAreas[state.currentAreaId].id = state.currentAreaId;
         },
 
+        setCurrentLat : (state, action:PayloadAction<number>)=>{
+            state.currentLat = action.payload;
+        },
+
         deleteAreaSelected : (state, action:PayloadAction<number>)=>{
             const id = action.payload;
             const area = state.selectedAreas[id];
@@ -104,6 +159,8 @@ const globalSlice = createSlice({
             }
         },
 
+
+        
         updateAreaName: (state, action: PayloadAction<{id: number, name: string}>) => {
             const area = state.selectedAreas[action.payload.id];
             if (area) {
@@ -166,6 +223,11 @@ const globalSlice = createSlice({
             state.areaGroups = state.areaGroups.filter(g => g.id !== groupId);
         },
 
+
+        setCurrentLong : (state, action:PayloadAction<number>)=>{
+            state.currentLong = action.payload;
+        },
+
         updateGroupName: (state, action: PayloadAction<{id: number, name: string}>) => {
             const group = state.areaGroups.find(g => g.id === action.payload.id);
             if (group) {
@@ -173,17 +235,23 @@ const globalSlice = createSlice({
             }
         },
 
+        setCurrentYear : (state, action:PayloadAction<number>)=>{
+            state.currentYear = action.payload;
+        },
+
         setMapHeight: (state, action: PayloadAction<number>) => {
             const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 900;
             state.mapHeight = Math.max(300, Math.min(action.payload, windowHeight - 100));
         }
     }
+
 })
 
 export const {
     addLatitudeSelected, 
     deleteLatitudeSelected, 
     setYearRange, 
+    setCurrentYear,
     deleteAreaSelected, 
     addAreaSelected,
     updateAreaName,
@@ -194,6 +262,7 @@ export const {
     deleteGroup,
     updateGroupName,
     setMapHeight,
+    setCurrentLat,
+    setCurrentLong,
 } = globalSlice.actions
-
-export default globalSlice.reducer
+export default globalSlice.reducer// Redux/Slice/GlobalSlice.ts
