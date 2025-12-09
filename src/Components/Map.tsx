@@ -27,6 +27,8 @@ export const Map = () => {
   const [currentYear, setCurrentYear] = useState(yearRange.start)
   const [yearProgress, setYearProgress] = useState(0)
   const [mapDimensions, setMapDimensions] = useState({ width: 0, height: 0 })
+  const [previousDimensions, setPreviousDimensions] = useState({ width: 0, height: 0 }) // ✅ Dimensions précédentes
+  const [hoveredArea, setHoveredArea] = useState<number | null>(null) // ✅ Pour tooltip
   
   const [dragStart, setDragStart] = useState<{x: number, y: number} | null>(null)
   const [dragCurrent, setDragCurrent] = useState<{x: number, y: number} | null>(null)
@@ -35,7 +37,6 @@ export const Map = () => {
   const [speed, setSpeed] = useState<1 | 1.5 | 2>(1)
   const [showSpeedMenu, setShowSpeedMenu] = useState(false)
 
-  // État pour le resize
   const [isResizing, setIsResizing] = useState(false)
 
   const mapController = useMemo(() => new MapController(dispatch), [dispatch])
@@ -54,6 +55,10 @@ export const Map = () => {
     if (mapWrapperRef.current) {
       const updateDimensions = () => {
         const rect = mapWrapperRef.current!.getBoundingClientRect()
+        
+        // ✅ Sauvegarder les dimensions précédentes avant la mise à jour
+        setPreviousDimensions(mapDimensions)
+        
         setMapDimensions({
           width: rect.width,
           height: rect.height
@@ -102,6 +107,29 @@ export const Map = () => {
       document.removeEventListener('mouseup', handleMouseUp)
     }
   }, [isResizing, dispatch])
+
+  // ✅ Fonction pour adapter les coordonnées des areas au nouveau ratio
+  const getScaledAreaCoordinates = (area: typeof selectedAreas[0]) => {
+    if (previousDimensions.width === 0 || previousDimensions.height === 0) {
+      return area // Pas encore de dimensions précédentes
+    }
+
+    // Ratio de changement
+    const scaleX = mapDimensions.width / previousDimensions.width
+    const scaleY = mapDimensions.height / previousDimensions.height
+
+    return {
+      ...area,
+      topLeft: {
+        x: area.topLeft.x * scaleX,
+        y: area.topLeft.y * scaleY
+      },
+      bottomRight: {
+        x: area.bottomRight.x * scaleX,
+        y: area.bottomRight.y * scaleY
+      }
+    }
+  }
 
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const year = parseInt(e.target.value)
@@ -251,6 +279,7 @@ export const Map = () => {
         onMouseLeave={() => {
           setDragStart(null)
           setDragCurrent(null)
+          setHoveredArea(null) // ✅ Cacher tooltip
         }}
         style={{ cursor: currentSelectionMode ? 'crosshair' : 'default' }}
       >
@@ -301,7 +330,9 @@ export const Map = () => {
           )
         })}
 
+        {/* ✅ Areas avec scaling automatique */}
         {selectedAreas.map(area => {
+          const scaledArea = getScaledAreaCoordinates(area)
           const group = areaGroups.find(g => g.id === area.groupId)
           const borderColor = group ? group.color : '#00FF00'
           
@@ -310,19 +341,88 @@ export const Map = () => {
               key={area.id}
               style={{
                 position: 'absolute',
-                left: `${area.topLeft.x}px`,
-                top: `${area.topLeft.y}px`,
-                width: `${area.bottomRight.x - area.topLeft.x}px`,
-                height: `${area.bottomRight.y - area.topLeft.y}px`,
+                left: `${scaledArea.topLeft.x}px`,
+                top: `${scaledArea.topLeft.y}px`,
+                width: `${scaledArea.bottomRight.x - scaledArea.topLeft.x}px`,
+                height: `${scaledArea.bottomRight.y - scaledArea.topLeft.y}px`,
                 border: `2px solid ${borderColor}`,
                 backgroundColor: group ? `${borderColor}20` : 'rgba(0, 255, 0, 0.15)',
                 boxShadow: `0 0 10px ${borderColor}99`,
-                pointerEvents: 'none',
-                zIndex: 20
+                pointerEvents: 'auto', // ✅ Activer hover
+                zIndex: 20,
+                cursor: 'pointer',
+                transition: 'all 0.2s'
               }}
+              onMouseEnter={() => setHoveredArea(area.id)}
+              onMouseLeave={() => setHoveredArea(null)}
             />
           )
         })}
+
+        {/* ✅ Tooltip métadonnées area */}
+        {hoveredArea !== null && (() => {
+          const area = selectedAreas.find(a => a.id === hoveredArea)
+          if (!area) return null
+          
+          const scaledArea = getScaledAreaCoordinates(area)
+          const group = areaGroups.find(g => g.id === area.groupId)
+          
+          // Calculer lat/lon depuis les coordonnées scalées
+          const latTop = 90 - (scaledArea.topLeft.y / mapDimensions.height) * 180
+          const latBottom = 90 - (scaledArea.bottomRight.y / mapDimensions.height) * 180
+          const lonLeft = (scaledArea.topLeft.x / mapDimensions.width) * 360 - 180
+          const lonRight = (scaledArea.bottomRight.x / mapDimensions.width) * 360 - 180
+          
+          return (
+            <div
+              className='area-tooltip'
+              style={{
+                position: 'absolute',
+                left: `${scaledArea.bottomRight.x + 10}px`,
+                top: `${scaledArea.topLeft.y}px`,
+                backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                padding: '10px 12px',
+                borderRadius: '6px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                zIndex: 100,
+                pointerEvents: 'none',
+                fontSize: '11px',
+                fontFamily: 'montserrat, sans-serif',
+                minWidth: '180px',
+                border: group ? `2px solid ${group.color}` : '2px solid #00FF00'
+              }}
+            >
+              <div style={{ 
+                fontWeight: 'bold', 
+                fontSize: '12px', 
+                marginBottom: '6px',
+                color: group ? group.color : '#00FF00'
+              }}>
+                {area.name}
+              </div>
+              
+              {group && (
+                <div style={{ 
+                  fontSize: '10px', 
+                  color: '#666',
+                  marginBottom: '6px',
+                  padding: '3px 6px',
+                  backgroundColor: `${group.color}20`,
+                  borderRadius: '3px',
+                  display: 'inline-block'
+                }}>
+                  Groupe: {group.name}
+                </div>
+              )}
+              
+              <div style={{ fontSize: '10px', color: '#333', lineHeight: '1.5' }}>
+                <div><strong>Latitude:</strong> {latTop.toFixed(1)}° à {latBottom.toFixed(1)}°</div>
+                <div><strong>Longitude:</strong> {lonLeft.toFixed(1)}° à {lonRight.toFixed(1)}°</div>
+                <div><strong>Dimensions:</strong> {(scaledArea.bottomRight.x - scaledArea.topLeft.x).toFixed(0)}×{(scaledArea.bottomRight.y - scaledArea.topLeft.y).toFixed(0)} px</div>
+              </div>
+            </div>
+          )
+        })()}
 
         {dragStart && dragCurrent && (
           <div
@@ -346,7 +446,6 @@ export const Map = () => {
           style={{
             position: 'absolute',
             bottom: '80px',
-            //left: '20px',
             right: '20px',
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
             padding: '5px 12px',
@@ -395,6 +494,8 @@ export const Map = () => {
         </div>
       </div>
 
+      {/* ... reste du code inchangé (year-navigation, animation-controls, resize-handle) ... */}
+      
       <div className='year-navigation'>
         <div className='year-slider-container'>
           <div className='year-label' style={{ left: `calc(${yearPercentage}% - 20px)` }}>
@@ -498,7 +599,6 @@ export const Map = () => {
         </button>
       </div>
 
-      {/*BARRE DE RESIZE */}
       <div 
         className='map-resize-handle'
         onMouseDown={handleResizeMouseDown}

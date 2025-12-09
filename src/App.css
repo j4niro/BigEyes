@@ -36,7 +36,7 @@ html, body {
   z-index: 150; /* Au-dessus du SettingPan */
   width: 40px;
   height: 40px;
-  background-color: #899785;
+  background-color: #89978540;
   color: white;
   border: none;
   border-radius: 4px;
