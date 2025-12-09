@@ -16,6 +16,7 @@ function App() {
   const [activeView, setActiveView] = useState<'heatmap' | 'histogram' | 'graph' | 'regression'>('heatmap')
   const [viewerHeight, setViewerHeight] = useState(300)
   const [layout, setLayout] = useState<"grid" | "single">("single")
+  const [showSettingPan, setShowSettingPan] = useState(true) // ✅ State toggle
 
   useEffect(() => {
     dispatch(loadEarthImage())
@@ -31,18 +32,29 @@ function App() {
   return (
     <div className="app-container">
       
-      {/* SettingPan - Position absolue, s'adapte à la hauteur de la map */}
-      <div 
-        className='setting-pan-wrapper'
-        style={{ maxHeight: `${mapHeight - 40}px` }}
+      {/* ✅ Bouton toggle SettingPan */}
+      <button 
+        className='toggle-setting-pan-btn'
+        onClick={() => setShowSettingPan(!showSettingPan)}
+        title={showSettingPan ? "Masquer Settings" : "Afficher Settings"}
       >
-        <SettingPan />
-      </div>
+        {showSettingPan ? '◀' : '▶'}
+      </button>
+
+      {/* SettingPan conditionnel avec animation */}
+      {showSettingPan && (
+        <div 
+          className='setting-pan-wrapper'
+          style={{ maxHeight: `${mapHeight - 40}px` }}
+        >
+          <SettingPan />
+        </div>
+      )}
       
-      {/* ✅ Map - Redimensionnable */}
+      {/* Map - Redimensionnable */}
       <Map />
 
-      {/* ✅ Graph Viewer - En dessous de la map */}
+      {/* Graph Viewer - En dessous de la map */}
       <div className="graph-viewer" style={{ height: `${viewerHeight}px` }}> 
         
         {/* Colonne de gauche avec les boutons */}

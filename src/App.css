@@ -28,10 +28,41 @@ html, body {
   flex-direction: column;
 }
 
+/* ===== BOUTON TOGGLE SETTING PAN ===== */
+.toggle-setting-pan-btn {
+  position: absolute;
+  top: 30px;
+  left: 20px;
+  z-index: 150; /* Au-dessus du SettingPan */
+  width: 40px;
+  height: 40px;
+  background-color: #899785;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-setting-pan-btn:hover {
+  background-color: #7a8675;
+  transform: scale(1.05);
+}
+
+.toggle-setting-pan-btn:active {
+  transform: scale(0.95);
+}
+
 /* ===== SETTING PAN ===== */
 .setting-pan-wrapper {
   position: absolute;
-  top: 60px;
+  top: 70px;
   left: 20px;
   z-index: 100;
 }

@@ -104,7 +104,7 @@ const initialState: GlobalState = {
     currentAreaId: null,
     areaGroups: [],
     nextGroupId: 1,
-    mapHeight : 600,
+    mapHeight : 525,
 }
 
 const globalSlice = createSlice({
