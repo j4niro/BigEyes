@@ -27,8 +27,19 @@ export const Map = () => {
   const [currentYear, setCurrentYear] = useState(yearRange.start)
   const [yearProgress, setYearProgress] = useState(0)
   const [mapDimensions, setMapDimensions] = useState({ width: 0, height: 0 })
-  const [previousDimensions, setPreviousDimensions] = useState({ width: 0, height: 0 }) // ✅ Dimensions précédentes
-  const [hoveredArea, setHoveredArea] = useState<number | null>(null) // ✅ Pour tooltip
+  
+  // Dimensions de référence (première initialisation)
+  const [referenceDimensions, setReferenceDimensions] = useState({ width: 0, height: 0 })
+  
+  // Coordonnées originales des areas à leur création
+  const [originalAreaCoords, setOriginalAreaCoords] = useState<{
+    [key: number]: {
+      topLeft: { x: number, y: number }
+      bottomRight: { x: number, y: number }
+    }
+  }>({})
+  
+  const [hoveredArea, setHoveredArea] = useState<number | null>(null)
   
   const [dragStart, setDragStart] = useState<{x: number, y: number} | null>(null)
   const [dragCurrent, setDragCurrent] = useState<{x: number, y: number} | null>(null)
@@ -50,15 +61,51 @@ export const Map = () => {
     setCurrentYear(yearRange.start)
   }, [yearRange.start])
 
+  // ✅ Initialiser les dimensions de référence une seule fois
+  useEffect(() => {
+    if (mapDimensions.width > 0 && mapDimensions.height > 0 && referenceDimensions.width === 0) {
+      console.log('Initialisation dimensions référence:', mapDimensions)
+      setReferenceDimensions({
+        width: mapDimensions.width,
+        height: mapDimensions.height
+      })
+      
+      // Sauvegarder les coordonnées originales des areas existantes
+      const coords: typeof originalAreaCoords = {}
+      selectedAreas.forEach(area => {
+        coords[area.id] = {
+          topLeft: { x: area.topLeft.x, y: area.topLeft.y },
+          bottomRight: { x: area.bottomRight.x, y: area.bottomRight.y }
+        }
+        console.log(`💾 Area ${area.id} - Coords originales:`, coords[area.id])
+      })
+      setOriginalAreaCoords(coords)
+    }
+  }, [mapDimensions, referenceDimensions.width, selectedAreas])
+
+  // ✅ Sauvegarder les coordonnées originales des nouvelles areas
+  useEffect(() => {
+    if (referenceDimensions.width === 0) return // Pas encore de référence
+    
+    selectedAreas.forEach(area => {
+      if (!originalAreaCoords[area.id]) {
+        console.log(`➕ Nouvelle area ${area.id} détectée, sauvegarde coords originales`)
+        setOriginalAreaCoords(prev => ({
+          ...prev,
+          [area.id]: {
+            topLeft: { x: area.topLeft.x, y: area.topLeft.y },
+            bottomRight: { x: area.bottomRight.x, y: area.bottomRight.y }
+          }
+        }))
+      }
+    })
+  }, [selectedAreas, originalAreaCoords, referenceDimensions.width])
+
   // Mettre à jour les dimensions du canvas
   useEffect(() => {
     if (mapWrapperRef.current) {
       const updateDimensions = () => {
         const rect = mapWrapperRef.current!.getBoundingClientRect()
-        
-        // ✅ Sauvegarder les dimensions précédentes avant la mise à jour
-        setPreviousDimensions(mapDimensions)
-        
         setMapDimensions({
           width: rect.width,
           height: rect.height
@@ -108,27 +155,36 @@ export const Map = () => {
     }
   }, [isResizing, dispatch])
 
-  // ✅ Fonction pour adapter les coordonnées des areas au nouveau ratio
+  // Calculer les coordonnées scalées depuis l'ORIGINAL
   const getScaledAreaCoordinates = (area: typeof selectedAreas[0]) => {
-    if (previousDimensions.width === 0 || previousDimensions.height === 0) {
-      return area // Pas encore de dimensions précédentes
+    // Pas encore de dimensions de référence
+    if (referenceDimensions.width === 0 || referenceDimensions.height === 0) {
+      return area
     }
 
-    // Ratio de changement
-    const scaleX = mapDimensions.width / previousDimensions.width
-    const scaleY = mapDimensions.height / previousDimensions.height
+    // Pas de coordonnées originales sauvegardées pour cette area
+    const originalCoords = originalAreaCoords[area.id]
+    if (!originalCoords) {
+      return area
+    }
 
-    return {
+    // Calculer le ratio depuis la RÉFÉRENCE (première taille de la map)
+    const scaleX = mapDimensions.width / referenceDimensions.width
+    const scaleY = mapDimensions.height / referenceDimensions.height
+
+    const scaled = {
       ...area,
       topLeft: {
-        x: area.topLeft.x * scaleX,
-        y: area.topLeft.y * scaleY
+        x: originalCoords.topLeft.x * scaleX,
+        y: originalCoords.topLeft.y * scaleY
       },
       bottomRight: {
-        x: area.bottomRight.x * scaleX,
-        y: area.bottomRight.y * scaleY
+        x: originalCoords.bottomRight.x * scaleX,
+        y: originalCoords.bottomRight.y * scaleY
       }
     }
+
+    return scaled
   }
 
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -279,7 +335,7 @@ export const Map = () => {
         onMouseLeave={() => {
           setDragStart(null)
           setDragCurrent(null)
-          setHoveredArea(null) // ✅ Cacher tooltip
+          setHoveredArea(null)
         }}
         style={{ cursor: currentSelectionMode ? 'crosshair' : 'default' }}
       >
@@ -330,7 +386,7 @@ export const Map = () => {
           )
         })}
 
-        {/* ✅ Areas avec scaling automatique */}
+        {/* Areas avec scaling depuis coordonnées originales */}
         {selectedAreas.map(area => {
           const scaledArea = getScaledAreaCoordinates(area)
           const group = areaGroups.find(g => g.id === area.groupId)
@@ -348,7 +404,7 @@ export const Map = () => {
                 border: `2px solid ${borderColor}`,
                 backgroundColor: group ? `${borderColor}20` : 'rgba(0, 255, 0, 0.15)',
                 boxShadow: `0 0 10px ${borderColor}99`,
-                pointerEvents: 'auto', // ✅ Activer hover
+                pointerEvents: 'auto',
                 zIndex: 20,
                 cursor: 'pointer',
                 transition: 'all 0.2s'
@@ -367,7 +423,6 @@ export const Map = () => {
           const scaledArea = getScaledAreaCoordinates(area)
           const group = areaGroups.find(g => g.id === area.groupId)
           
-          // Calculer lat/lon depuis les coordonnées scalées
           const latTop = 90 - (scaledArea.topLeft.y / mapDimensions.height) * 180
           const latBottom = 90 - (scaledArea.bottomRight.y / mapDimensions.height) * 180
           const lonLeft = (scaledArea.topLeft.x / mapDimensions.width) * 360 - 180
@@ -494,8 +549,6 @@ export const Map = () => {
         </div>
       </div>
 
-      {/* ... reste du code inchangé (year-navigation, animation-controls, resize-handle) ... */}
-      
       <div className='year-navigation'>
         <div className='year-slider-container'>
           <div className='year-label' style={{ left: `calc(${yearPercentage}% - 20px)` }}>
@@ -605,7 +658,6 @@ export const Map = () => {
         style={{ cursor: 'ns-resize' }}
       >
         <div className='resize-bar' />
-        <span className='resize-label'>Resize Map</span>
       </div>
     </div>
   )
