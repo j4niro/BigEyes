@@ -196,20 +196,20 @@
     font-weight: 600;
 }
 
-/* Dropdown content avec scroll - VERSION CORRIGÉE */
+/* Dropdown content avec scroll  */
 .selections-dropdown {
     position: absolute;
     bottom: calc(100% + 5px);
     left: 0;
-    width: 280px; /* Largeur fixe plus grande */
+    width: 300px; 
     background-color: white;
     border: 1px solid #ccc;
     border-radius: 4px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     z-index: 100;
-    max-height: 400px; /* Hauteur maximale augmentée */
+    max-height: 400px; 
     overflow-y: scroll; /* Force le scroll visible */
-    overflow-x: hidden; /* Pas de scroll horizontal */
+    overflow-x: hidden;
 }
 
 /* Style de la scrollbar pour webkit (Chrome, Safari, Edge) */
