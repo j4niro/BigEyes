@@ -43,8 +43,11 @@ export class SettingPanController {
       return { success: false, message: "Valeur invalide" }
     }
     
-    if (lat < -88 || lat > 88) {
+    if (lat < -88 || lat > 88 ) {
       return { success: false, message: "Latitude entre -88° et 88°" }
+    }
+    else if(lat%4!==0){
+      return { success: false, message: "Latitude inexistante" }
     }
 
     const latitude: Latitude = {

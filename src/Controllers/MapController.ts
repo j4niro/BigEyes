@@ -62,7 +62,7 @@ export class MapController {
         }
       }
 
-      this.dispatch(addAreaSelected(area))
+      this.dispatch(addAreaSelected(area));
       this.startPoint = null
     }
   }
@@ -71,6 +71,8 @@ export class MapController {
     //const roundedLat = Math.round(lat / 4) * 4
     const roundedLat = Math.round(lat)
     const clampedLat = Math.max(-88, Math.min(88, roundedLat))
+
+    if(clampedLat%4!==0) return; // on part de -88 de 4 en 4
 
     const latitude: Latitude = {
       id: 0,

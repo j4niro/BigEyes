@@ -30,11 +30,12 @@ export default class GraphBar<T> {
   draw(color?: string) {
     this.ctx.save();
 
-    if (color) {
-      this.color = color;
-    }
-
     this.ctx.fillStyle = this.color;
+
+    if (color && color !== this.color) {
+      this.ctx.fillStyle = color;
+    }
+    
     this.ctx.fill(this.shape);
     this.ctx.restore();
   }

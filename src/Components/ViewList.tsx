@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom"; // Import nécessaire
 import { useViewListController } from "../Controllers/ViewListController";
+import { useDispatch, useSelector } from "react-redux"; 
+import type { RootState } from "../Redux/Store/Store"; 
+import { reorderViews, type ViewKey } from "../Redux/Slice/GlobalSlice";
+
 
 interface ViewListProps {
   activeView: "heatmap" | "histogram" | "graph" | "regression";
@@ -10,14 +14,6 @@ interface ViewListProps {
   layout: "grid" | "single";
   setLayout: (layout: "grid" | "single") => void;
 }
-
-// Descriptions des graphiques
-const viewDescriptions = {
-  heatmap: "Carte thermique interactive montrant la distribution globale des anomalies.",
-  histogram: "Histogramme analysant la fréquence des anomalies par latitude.",
-  graph: "Graphique standard visualisant les courbes d'évolution temporelle.",
-  regression: "Analyse des tendances climatiques (1880-2025) via régression linéaire."
-};
 
 // Composant utilitaire pour le Tooltip Portail
 const TooltipPortal = ({ 
@@ -59,7 +55,13 @@ const TooltipPortal = ({
     );
 };
 
-
+// Configuration constante (ne change pas)
+const viewConfig: Record<ViewKey, { icon: string; label: string; desc: string }> = {
+  heatmap: { icon: "🔥", label: "Heatmap", desc: "Carte thermique interactive..." },
+  histogram: { icon: "📊", label: "Histogram", desc: "Histogramme analysant la fréquence..." },
+  graph: { icon: "📈", label: "Graph", desc: "Graphique standard visualisant..." },
+  regression: { icon: "📏", label: "Regression", desc: "Analyse des tendances..." }
+};
 
 export default function ViewList({ 
   activeView, 
@@ -70,26 +72,66 @@ export default function ViewList({
   setLayout 
 }: ViewListProps) {
   
-  const controller = useViewListController({
-    viewerHeight,
-    onHeightChange,
-    setLayout
-  });
+  const dispatch = useDispatch();
+  
+  // 1. Lecture de l'ordre depuis Redux (Source de vérité)
+  const viewOrder = useSelector((state: RootState) => state.globalState.viewOrder);
 
-  // État local pour savoir quel bouton est survolé
+  const controller = useViewListController({ viewerHeight, onHeightChange, setLayout });
+  
+  // Refs pour le Drag & Drop
+  const dragItemIndex = useRef<number | null>(null);
+  const dragOverItemIndex = useRef<number | null>(null);
+  
+  // État local purement visuel (pour savoir qui est 'dimmed')
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [hoveredView, setHoveredView] = useState<string | null>(null);
+  const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  // Initialisation des refs avec le type précis
-  const btnRefs = {
-      heatmap: useRef<HTMLButtonElement>(null),
-      histogram: useRef<HTMLButtonElement>(null),
-      graph: useRef<HTMLButtonElement>(null),
-      regression: useRef<HTMLButtonElement>(null),
+  // --- LOGIQUE REDUX DND ---
+
+  const handleDragStart = (index: number) => {
+    dragItemIndex.current = index;
+    setDraggingIndex(index); // Déclenche le re-render pour le style visuel
+  };
+
+  const handleDragEnter = (index: number) => {
+    dragOverItemIndex.current = index;
+
+    // Si on survole un élément différent de celui qu'on tient
+    if (dragItemIndex.current !== null && dragItemIndex.current !== dragOverItemIndex.current) {
+      
+      // 1. Copie du tableau actuel (immutable)
+      const newOrder = [...viewOrder];
+      
+      // 2. On récupère l'élément déplacé
+      const draggedItemContent = newOrder[dragItemIndex.current];
+      
+      // 3. Suppression à l'ancienne position
+      newOrder.splice(dragItemIndex.current, 1);
+      
+      // 4. Insertion à la nouvelle position
+      newOrder.splice(dragOverItemIndex.current, 0, draggedItemContent);
+
+      // 5. Mise à jour des références pour que la logique continue
+      dragItemIndex.current = dragOverItemIndex.current;
+      setDraggingIndex(dragOverItemIndex.current); // Met à jour l'index visuel
+
+      // 6. DISPATCH REDUX : C'est ici que le DOM sera mis à jour par React
+      dispatch(reorderViews(newOrder));
+    }
+  };
+
+  const handleDragEnd = () => {
+    dragItemIndex.current = null;
+    dragOverItemIndex.current = null;
+    setDraggingIndex(null); // Reset du style
   };
 
   return (
     <>
       {/* La poignée de redimensionnement */}
+
       <div 
         className="resize-handle-trigger"
         onMouseDown={controller.handleMouseDown}
@@ -118,69 +160,45 @@ export default function ViewList({
                 ☰
             </button>
         </div>
-
-        {/* --- 2. LISTE DES VUES (SCROLLABLE) --- */}
+        
         <div className="views-container">
-          
-          {/* Bouton Heatmap */}
-          <button
-            ref={btnRefs.heatmap} /* On attache la ref */
-            className={`view-button ${activeView === "heatmap" ? "active" : ""}`}
-            onClick={() => setActiveView("heatmap")}
-            onMouseEnter={() => setHoveredView("heatmap")}
-            onMouseLeave={() => setHoveredView(null)}
-          >
-            <div className="view-icon">🔥</div>
-            <div className="view-text">Heatmap</div>
-          </button>
-          {/* Le tooltip est rendu via le Portal si survolé */}
-          {hoveredView === "heatmap" && (
-              <TooltipPortal targetRef={btnRefs.heatmap}>{viewDescriptions.heatmap}</TooltipPortal>
-          )}
+          {viewOrder.map((key, index) => {
+            const config = viewConfig[key];
+            const isDragging = draggingIndex === index; // Style conditionnel pur React
 
-          {/* Bouton Histogram */}
-          <button
-            ref={btnRefs.histogram}
-            className={`view-button ${activeView === "histogram" ? "active" : ""}`}
-            onClick={() => setActiveView("histogram")}
-            onMouseEnter={() => setHoveredView("histogram")}
-            onMouseLeave={() => setHoveredView(null)}
-          >
-            <div className="view-icon">📊</div>
-            <div className="view-text">Histogram</div>
-          </button>
-          {hoveredView === "histogram" && (
-              <TooltipPortal targetRef={btnRefs.histogram}>{viewDescriptions.histogram}</TooltipPortal>
-          )}
+            return (
+              <React.Fragment key={key}>
+                <button
+                  ref={(el) => { btnRefs.current[key] = el; }}
+                  
+                  // Classes dynamiques basées sur l'état
+                  className={`view-button ${activeView === key ? "active" : ""} ${isDragging ? "view-button-dragging" : ""}`}
+                  
+                  onClick={() => setActiveView(key)}
+                  onMouseEnter={() => setHoveredView(key)}
+                  onMouseLeave={() => setHoveredView(null)}
+                  
+                  // Attributs Drag & Drop
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragEnter={() => handleDragEnter(index)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={(e) => e.preventDefault()} // Obligatoire
+                  
+                  style={{ cursor: isDragging ? "grabbing" : "grab" }}
+                >
+                  <div className="view-icon">{config.icon}</div>
+                  <div className="view-text">{config.label}</div>
+                </button>
 
-          {/* ... Fais de même pour Graph et Regression ... */}
-           <button
-            ref={btnRefs.graph}
-            className={`view-button ${activeView === "graph" ? "active" : ""}`}
-            onClick={() => setActiveView("graph")}
-            onMouseEnter={() => setHoveredView("graph")}
-            onMouseLeave={() => setHoveredView(null)}
-          >
-            <div className="view-icon">📈</div>
-            <div className="view-text">Graph</div>
-          </button>
-          {hoveredView === "graph" && (
-              <TooltipPortal targetRef={btnRefs.graph}>{viewDescriptions.graph}</TooltipPortal>
-          )}
-
-           <button
-            ref={btnRefs.regression}
-            className={`view-button ${activeView === "regression" ? "active" : ""}`}
-            onClick={() => setActiveView("regression")}
-            onMouseEnter={() => setHoveredView("regression")}
-            onMouseLeave={() => setHoveredView(null)}
-          >
-            <div className="view-icon">📏</div>
-            <div className="view-text">Regression</div>
-          </button>
-          {hoveredView === "regression" && (
-              <TooltipPortal targetRef={btnRefs.regression}>{viewDescriptions.regression}</TooltipPortal>
-          )}
+                {hoveredView === key && !isDragging && (
+                   <TooltipPortal targetRef={{ current: btnRefs.current[key] }}>
+                      {config.desc}
+                   </TooltipPortal>
+                )}
+              </React.Fragment>
+            );
+          })}
 
         </div>
       </div>

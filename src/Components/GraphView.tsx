@@ -7,6 +7,7 @@ import GraphController, { type graphControllerProperties } from "../Controllers/
 import HeatMapController, { type heatMapControllerProperties } from "../Controllers/GraphControllers/HeatMapControllers";
 import HistogramController, { type histogramControllerProperties } from "../Controllers/GraphControllers/HistogramController";
 import RegressionController, { type regressionControllerProperties } from "../Controllers/GraphControllers/RegressionController";
+import type { TempAnomalyArea } from "../Redux/Slice/DataSlice";
 
 // Définition des types de graphes disponibles
 export type GraphType = 'standard' | 'heatmap' | 'histogram' | 'regression';
@@ -28,14 +29,39 @@ export default function GraphView({ type, offset = 40 }: Props) {
 
     // --- 1. Récupération centralisée de TOUTES les données nécessaires via Redux ---
     const data = useAppSelector((state) => state.data.tempData);
-    const selectedYear = useAppSelector((state) => state.globalState.currentYear);
+    const selectedYear = useAppSelector((state) => state.globalState.yearRange.start);
     
     // Spécifique au graphe Standard
-    const areasProvided = useAppSelector((state) => state.globalState.selectedAreasResolved);
+    const areasProvided = useAppSelector((state) => state.globalState.selectedAreas);
+    const areasGroups = useAppSelector((state) => state.globalState.areaGroups);
     
     // Spécifique aux graphes Histogram et Regression
     const selectedLat = useAppSelector((state) => state.globalState.selectedLatitudes);
     const selectedLatVersion = useAppSelector((state) => state.globalState.selectedLatitudesVersion);
+
+    function getAreaComputed():{tempA:TempAnomalyArea, groupId:number, color:string}[] {
+        let areasComputed:{tempA:TempAnomalyArea, groupId:number, color:string}[] = [];
+
+        for (const areaG of areasGroups) {
+            for (const areaId of areaG.areaIds) {
+                const area = areasProvided.find((o)=>o.id === areaId);
+                for (const tempA of data.tempanomalies) {
+                    if(!area?.scaledMetaData) continue;
+                    if (tempA.lat>=area.scaledMetaData.minLat && tempA.lat<=area.scaledMetaData.maxLat && tempA.lon>=area.scaledMetaData.minLong && tempA.lon<=area.scaledMetaData.maxLong) {
+                        areasComputed.push(
+                            {
+                                tempA : tempA,
+                                groupId : areaG.id,
+                                color: areaG.color
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        return areasComputed;
+    }
 
     // --- 2. Initialisation du contrôleur (Constructor) ---
     useEffect(() => {
@@ -43,10 +69,11 @@ export default function GraphView({ type, offset = 40 }: Props) {
         controllerRef.current = null; 
 
         if (type === 'standard') {
+
             const props: graphControllerProperties = {
                 allAreas: data,
                 graphZoneOffset: offset,
-                areasIdentifiedByGroupID: areasProvided,
+                areasIdentifiedByGroupID: getAreaComputed(),
                 currentYear: selectedYear,
                 dispatcher: dispatch,
             };
@@ -85,6 +112,7 @@ export default function GraphView({ type, offset = 40 }: Props) {
     }, [type]); 
 
 
+
     // --- 3. Gestion du Rendu et Mise à jour des données (Update & Draw) ---
     useEffect(() => {
         const div = divRef.current;
@@ -105,7 +133,7 @@ export default function GraphView({ type, offset = 40 }: Props) {
         switch (type) {
             case 'standard':
                 // Cast explicite ou inférence pour accéder à la bonne méthode
-                (controller as GraphController).updateData(data, areasProvided, selectedYear);
+                (controller as GraphController).updateData(getAreaComputed(), selectedYear);
                 break;
 
             case 'heatmap':
@@ -113,7 +141,6 @@ export default function GraphView({ type, offset = 40 }: Props) {
                 break;
 
             case 'histogram':
-                // Note: Tu avais [selectedLat, 0] en dur dans ton composant 3
                 (controller as HistogramController).updateData(data.tempanomalies, selectedLat.map((o)=>o.lat), selectedYear);
                 break;
 
@@ -122,17 +149,15 @@ export default function GraphView({ type, offset = 40 }: Props) {
                 break;
         }
 
-        // Dessin final
-        controller.drawGraph();
-
     }, [
         // Dépendances : Tout ce qui peut déclencher un re-render
         type, 
         offset, 
         data, 
         selectedYear, 
-        areasProvided, 
-        selectedLat, 
+        areasProvided.length,
+        areasGroups.length, 
+        selectedLat.map((o)=>o.lat), 
         selectedLatVersion
     ]);
 

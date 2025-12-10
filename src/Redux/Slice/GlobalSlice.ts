@@ -18,6 +18,12 @@ export type Area = {
     topLeft:Dot,
     bottomRight:Dot,
     groupId?: number,
+    scaledMetaData?:{
+        minLat:number,
+        maxLat:number,
+        minLong:number,
+        maxLong:number,
+    }
 }
 
 export type AreaGroup = {
@@ -28,6 +34,8 @@ export type AreaGroup = {
 }
 
 export type SelectionMode = 'latitude' | 'area' | null
+
+export type ViewKey = "heatmap" | "histogram" | "graph" | "regression";
 
 export type viewDisposition = {
   position: "top-left-graph" | "bottom-left-graph";
@@ -57,6 +65,7 @@ export type YearRange = { // if start === end then only one year is selected
 }
 
 export type GlobalState = {
+
     currentAreaId:number|null,
     currentLatId:number|null,
 
@@ -65,7 +74,7 @@ export type GlobalState = {
     mapHeight: number,
 
     yearRange : YearRange,
-    currentYear : number,
+    // currentYear : number,
 
     selectedAreasResolved : Array<TempAnomalyArea>,
     selectedAreas : Array<Area>,
@@ -81,13 +90,16 @@ export type GlobalState = {
     selectedLatitudesVersion : number,
     currentLong:number,
 
-    viewsDisposition?:string,
+    viewOrder: ViewKey[],
+    viewerHeight:number,
+
+    mapDimensions:{width:number, height:number},
 }
 
 const initialState: GlobalState = {
     
     yearRange : {start:1880, end:2025}, 
-    currentYear: 2020,
+    // currentYear: 2020,
 
     selectedAreas : [],
     selectedAreasResolved : [],
@@ -104,7 +116,12 @@ const initialState: GlobalState = {
     currentAreaId: null,
     areaGroups: [],
     nextGroupId: 1,
-    mapHeight : 525,
+    mapHeight : 430,
+    viewerHeight: 300,
+
+    mapDimensions:{width:0, height:0},
+
+    viewOrder: ["heatmap", "histogram", "graph", "regression"],
 }
 
 const globalSlice = createSlice({
@@ -235,13 +252,52 @@ const globalSlice = createSlice({
             }
         },
 
-        setCurrentYear : (state, action:PayloadAction<number>)=>{
-            state.currentYear = action.payload;
-        },
+        // setCurrentYear : (state, action:PayloadAction<number>)=>{
+        //     state.currentYear = action.payload;
+        // },
 
         setMapHeight: (state, action: PayloadAction<number>) => {
             const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 900;
             state.mapHeight = Math.max(300, Math.min(action.payload, windowHeight - 100));
+        },
+
+        setViewerHeight:(state, action: PayloadAction<number>) => {
+            const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 900;
+            state.viewerHeight = action.payload ; 
+            state.mapHeight = Math.max(300, Math.min(action.payload, windowHeight - state.viewerHeight));
+        },
+
+        reorderViews: (state, action: PayloadAction<ViewKey[]>) => {
+            state.viewOrder = action.payload;
+        },
+
+        setAreaScaledCoordinates : (state, action:PayloadAction<Area>)=>{
+            const areaToUpdate = state.selectedAreas.find((area)=>area.id === action.payload.id);
+
+            const latTop = 90 - (action.payload.topLeft.y / state.mapDimensions.height) * 180;
+            const latBottom = 90 - (action.payload.bottomRight.y / state.mapDimensions.height) * 180;
+            const lonLeft = (action.payload.topLeft.x / state.mapDimensions.width) * 360 - 180;
+            const lonRight = (action.payload.bottomRight.x / state.mapDimensions.width) * 360 - 180;
+
+            if(areaToUpdate){
+                if(!areaToUpdate.scaledMetaData){
+                    areaToUpdate.scaledMetaData = {
+                        minLat:0,
+                        maxLat:0,
+                        minLong:0,
+                        maxLong:0,
+                    }
+                }
+                areaToUpdate.scaledMetaData.maxLat = latTop;
+                areaToUpdate.scaledMetaData.minLat = latBottom;
+                areaToUpdate.scaledMetaData.minLong = lonLeft;
+                areaToUpdate.scaledMetaData.maxLong = lonRight;
+            }
+
+        },
+
+        setMapDimensions:(state, action:PayloadAction<{width:number, height:number}>)=>{
+            state.mapDimensions = {...action.payload};
         }
     }
 
@@ -251,8 +307,9 @@ export const {
     addLatitudeSelected, 
     deleteLatitudeSelected, 
     setYearRange, 
-    setCurrentYear,
+    setViewerHeight,
     deleteAreaSelected, 
+    reorderViews,
     addAreaSelected,
     updateAreaName,
     setSelectionMode,
@@ -264,5 +321,7 @@ export const {
     setMapHeight,
     setCurrentLat,
     setCurrentLong,
+    setMapDimensions,
+    setAreaScaledCoordinates,
 } = globalSlice.actions
 export default globalSlice.reducer// Redux/Slice/GlobalSlice.ts

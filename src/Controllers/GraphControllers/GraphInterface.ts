@@ -12,19 +12,4 @@ export interface Graph {
 }
 
 export interface GraphInterface {
-    initializeData(...args: any[]): any;
-
-    setCanvas(...args: any[]): any;
-
-    updateData(...args: any[]): any;
-
-    onMouseDown(...args: any[]): any;
-
-    drawGraph(...args: any[]): any;
-
-    redrawGraph(...args: any[]): any;
-
-    drawAxis(...args: any[]): any;
-
-    drawGraduations(...args: any[]): any;
 }

@@ -1,11 +1,11 @@
 import type { TempAnomalyArea, TempAnomalyData, YearValue } from "../../Redux/Slice/DataSlice";
-import { setCurrentYear } from "../../Redux/Slice/GlobalSlice";
+import { setYearRange } from "../../Redux/Slice/GlobalSlice";
 import type { GraphInterface } from "./GraphInterface";
 
 
 export interface graphControllerProperties {
     allAreas : TempAnomalyData;
-    areasIdentifiedByGroupID:TempAnomalyArea[];
+    areasIdentifiedByGroupID:{tempA:TempAnomalyArea, groupId:number, color:string}[];
     currentYear: number;
     graphZoneOffset: number;
     dispatcher:(func:any)=>any;
@@ -22,14 +22,13 @@ export default class GraphController implements GraphInterface {
     private width:number = 0;
     private height:number = 0;
 
-    private ar: TempAnomalyArea[][];   // <--- plusieurs groupes
-    private allAreas:TempAnomalyData;
-    private areasProvided:TempAnomalyArea[];
+    private ar: {tempA:TempAnomalyArea, groupId:number, color:string}[][] = [];   // <--- plusieurs groupes
+    private areasProvided:{tempA:TempAnomalyArea, groupId:number, color:string}[];
 
     // private an: number;
     private yearRef: number;
 
-    private colors:string[] = ["blue", "red", "green", "orange", "purple", "black"];
+    private colors:string[] = [];
 
     private allMeanData: Array<{
         groupName: string;
@@ -53,25 +52,31 @@ export default class GraphController implements GraphInterface {
         this.dispatch = props.dispatcher;
 
         this.areasProvided = props.areasIdentifiedByGroupID;
-        this.allAreas = props.allAreas;
 
-        const _areasProvided = [this.getAreaToRender()];
-
-        //Simulation de plusieurs groupes de plusieurs area
-        _areasProvided[0] !== undefined ? this.ar = [[..._areasProvided[0].slice(0, 5)], [..._areasProvided[0].slice(1100, 3000)], [..._areasProvided[0].slice(3100, 4000)]] : this.ar = [];
-        console.log("AREAS", this.ar);
+        // console.log("AREAS", this.ar);
     }
 
-    getAreaToRender(): TempAnomalyArea[] | undefined {
-        //TODO : prendre toutes les Area dans this.areasProvided et les regrouper par tableau de Area ayant le même Group ID puis 
-        if (this.areasProvided.length === 0) {
-            if (this.allAreas.tempanomalies.length === 0) {
-                return ;
+    computeAreaToRender(): void{
+        if (this.areasProvided.length === 0) return;
+
+        const groups: Map<number, {tempA:TempAnomalyArea, groupId:number, color:string}[]> = new Map();
+
+        // Grouper par groupId
+        for (const area of this.areasProvided) {
+            if (!groups.has(area.groupId)) {
+                groups.set(area.groupId, []);
             }
-            return this.allAreas.tempanomalies ;
-        };
-        return this.areasProvided ;
+            groups.get(area.groupId)!.push(area);
+        }
+
+        // Transformer Map en tableau de tableaux
+        const groupedData = Array.from(groups.values());
+
+        // Mettre à jour la variable interne this.ar utilisée par drawLegend & co
+        this.ar = groupedData;
+
     }
+
 
     drawLegend():void{
         if (!this.canvas || !this.ctx) return ;
@@ -93,11 +98,11 @@ export default class GraphController implements GraphInterface {
     }
 
     setYear(year:number) {
-          this.dispatch(setCurrentYear(year));
+          this.dispatch(setYearRange({start:year, end:2025}));
     }
 
     handleMouseDown = (event: React.MouseEvent) => {
-        
+
             const year = this.onMouseDown(event);
             if(year === undefined) return ;
             this.setYear(Math.round(year));
@@ -114,14 +119,14 @@ export default class GraphController implements GraphInterface {
         this.height = this.canvas.height - this.offset * 2;
     }
 
-    updateData(allA:TempAnomalyData, areaP:TempAnomalyArea[], an: number) {
+    updateData(areaP:{tempA:TempAnomalyArea, groupId:number, color:string}[], an: number) {
 
         this.areasProvided = areaP;
-        this.allAreas = allA;
-        const _areasProvided = [this.getAreaToRender()];
-        _areasProvided[0] !== undefined ? this.ar = [[..._areasProvided[0].slice(0, 5)], [..._areasProvided[0].slice(1100, 3000)], [..._areasProvided[0].slice(3100, 4000)]] : this.ar = [];
-        // this.an = an;
         this.yearRef = an;
+
+        this.computeAreaToRender();
+        this.drawGraph();
+
     }
 
     private drawYearLine(year: number): void {
@@ -153,7 +158,6 @@ export default class GraphController implements GraphInterface {
 
         const year = 1880 + xGraph / scaleX;
         this.yearRef = year;
-        console.log("YEAR : ", Math.round(year));
 
         this.redrawGraph();
         this.drawYearLine(year);
@@ -274,7 +278,7 @@ export default class GraphController implements GraphInterface {
     }
 
     private calculateSingleExtremValues(
-        ar: TempAnomalyArea[],
+        ar: {tempA:TempAnomalyArea, groupId:number, color:string}[],
         init?: { min: number; max: number }
     ): { min: number; max: number } {
 
@@ -282,7 +286,7 @@ export default class GraphController implements GraphInterface {
         let maxV = init?.max ?? -100;
 
         for (let e of ar) {
-            const vals = e.data.map((o) => Number(o.value) || 0);
+            const vals = e.tempA.data.map((o) => Number(o.value) || 0);
             minV = Math.min(minV, Math.min(...vals));
             maxV = Math.max(maxV, Math.max(...vals));
         }
@@ -295,15 +299,18 @@ export default class GraphController implements GraphInterface {
     initializeData(): void {
         this.extremValues = this.calculateExtremValues();
         this.allMeanData = [];
+        this.colors = [];
 
         for (let groupIndex = 0; groupIndex < this.ar.length; groupIndex++) {
+            
             //console.log("LEN : ", this.ar.length, "STEP : ", groupIndex);
             const areaGroup = this.ar[groupIndex];
+            this.colors.push(areaGroup[0].color);
 
             const yearMap = new Map<number, { sum: number; count: number }>();
 
             for (let serie of areaGroup) {
-                for (let yv of serie.data) {
+                for (let yv of serie.tempA.data) {
                     const year = yv.year;
                     const val = Number(yv.value);
                     if (!yearMap.has(year)) yearMap.set(year, { sum: 0, count: 0 });

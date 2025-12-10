@@ -70,3 +70,21 @@
   from { opacity: 0; transform: translate(-10px, -50%); }
   to { opacity: 1; transform: translate(0, -50%); }
 }
+
+/* Style appliqué via la prop className conditionnelle de React */
+.view-button-dragging {
+  opacity: 0.4;
+  border: 1px dashed #aaa;
+  background-color: #f0f0f0;
+  box-shadow: none;
+}
+
+/* Empêcher les interactions pointer sur l'élément qu'on traine pour éviter les clignotements */
+.view-button-dragging * {
+  pointer-events: none; 
+}
+
+.graph-viewer-content {
+    scroll-behavior: smooth; /* Active le scroll fluide natif */
+    /* ... vos autres styles */
+}

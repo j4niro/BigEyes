@@ -1,5 +1,5 @@
 import type { TempAnomalyArea, TempAnomalyData } from "../../Redux/Slice/DataSlice";
-import { setCurrentYear } from "../../Redux/Slice/GlobalSlice";
+import { setYearRange } from "../../Redux/Slice/GlobalSlice";
 import type { GraphInterface } from "./GraphInterface";
 
 
@@ -58,7 +58,7 @@ export default class RegressionController implements GraphInterface {
     }
 
     setYear(year:number) {
-        this.dispatch(setCurrentYear(year));
+        this.dispatch(setYearRange({start:year, end:2025}));
     }
 
     handleMouseDown = (event: React.MouseEvent) => {
@@ -81,6 +81,8 @@ export default class RegressionController implements GraphInterface {
         this.ar = ar;
         this.lat = lat;
         this.yearRef = an;
+
+        this.drawGraph();
     }
 
     // Calcul des min/max pour l'échelle Y (Température)
@@ -143,9 +145,9 @@ export default class RegressionController implements GraphInterface {
 
         const scaleX = this.width / 146;
         const xGraph = (year - 1880) * scaleX;
-        console.log("XGRAPH ", xGraph);
-        console.log("WIDTH ", this.width);
-        console.log("YEAR ", year);
+        // console.log("XGRAPH ", xGraph);
+        // console.log("WIDTH ", this.width);
+        // console.log("YEAR ", year);
 
         if (xGraph < 0 || xGraph > this.width) return;
 
@@ -154,7 +156,7 @@ export default class RegressionController implements GraphInterface {
         this.ctx.lineTo(this.offsetX + xGraph, this.offsetY + this.height);
         this.ctx.strokeStyle = "red";
         this.ctx.lineWidth = 1.5;
-        console.log("LINE DRAWN");
+        // console.log("LINE DRAWN");
         this.ctx.stroke();
     }
 
@@ -171,7 +173,7 @@ export default class RegressionController implements GraphInterface {
 
         const year = 1880 + xGraph / scaleX;
         this.yearRef = year;
-        console.log("YEAR : ", Math.round(year));
+        // console.log("YEAR : ", Math.round(year));
 
         //this.redrawGraph();
         this.drawYearLine(year);
@@ -211,8 +213,20 @@ export default class RegressionController implements GraphInterface {
         });
     }
 
-    drawGraph(): void {
+    drawEmptyData():void{
         if (!this.canvas || !this.ctx) return;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.ctx.save();
+        this.ctx.textAlign = "center";
+        this.ctx.font = "15px Verdana";
+        this.ctx.fillText("No data available...", this.width / 2, this.height / 2);
+        this.ctx.restore();
+        
+    }
+
+    drawGraph(): void {
+        if (!this.canvas || !this.ctx || this.lat.length === 0) {this.drawEmptyData(); return};
 
         // Reset
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);

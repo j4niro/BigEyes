@@ -62,9 +62,9 @@ html, body {
 /* ===== SETTING PAN ===== */
 .setting-pan-wrapper {
   position: absolute;
-  top: 70px;
-  left: 20px;
-  z-index: 100;
+  top: 30px;
+  left: 68px;
+  z-index: 10000;
 }
 
 .setting-pan-wrapper::-webkit-scrollbar {

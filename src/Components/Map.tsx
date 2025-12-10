@@ -11,7 +11,7 @@ import start from '../../public/Play_button_arrowhead.png'
 import gostart from '../../public/gostart_button.png'
 import goend from '../../public/goend_button.png'
 import earthImage from '../../public/earth.png'
-import { setYearRange, setMapHeight } from '../Redux/Slice/GlobalSlice'
+import { setYearRange, setMapHeight, setMapDimensions, setAreaScaledCoordinates } from '../Redux/Slice/GlobalSlice'
 
 export const Map = () => {
   const dispatch = useAppDispatch()
@@ -22,11 +22,11 @@ export const Map = () => {
   const yearRange = useAppSelector(state => state.globalState.yearRange)
   const currentSelectionMode = useAppSelector(state => state.globalState.currentSelectionMode)
   const mapHeight = useAppSelector(state => state.globalState.mapHeight) 
+  const mapDimensions = useAppSelector(state => state.globalState.mapDimensions) 
 
   const mapWrapperRef = useRef<HTMLDivElement>(null)
   const [currentYear, setCurrentYear] = useState(yearRange.start)
   const [yearProgress, setYearProgress] = useState(0)
-  const [mapDimensions, setMapDimensions] = useState({ width: 0, height: 0 })
   
   // Dimensions de référence (première initialisation)
   const [referenceDimensions, setReferenceDimensions] = useState({ width: 0, height: 0 })
@@ -64,7 +64,7 @@ export const Map = () => {
   // ✅ Initialiser les dimensions de référence une seule fois
   useEffect(() => {
     if (mapDimensions.width > 0 && mapDimensions.height > 0 && referenceDimensions.width === 0) {
-      console.log('Initialisation dimensions référence:', mapDimensions)
+      // console.log('Initialisation dimensions référence:', mapDimensions)
       setReferenceDimensions({
         width: mapDimensions.width,
         height: mapDimensions.height
@@ -96,8 +96,10 @@ export const Map = () => {
             topLeft: { x: area.topLeft.x, y: area.topLeft.y },
             bottomRight: { x: area.bottomRight.x, y: area.bottomRight.y }
           }
+
         }))
       }
+      dispatch(setAreaScaledCoordinates(getScaledAreaCoordinates(area)));
     })
   }, [selectedAreas, originalAreaCoords, referenceDimensions.width])
 
@@ -106,10 +108,10 @@ export const Map = () => {
     if (mapWrapperRef.current) {
       const updateDimensions = () => {
         const rect = mapWrapperRef.current!.getBoundingClientRect()
-        setMapDimensions({
+        dispatch(setMapDimensions({
           width: rect.width,
           height: rect.height
-        })
+        }))
       }
       
       updateDimensions()
@@ -183,7 +185,6 @@ export const Map = () => {
         y: originalCoords.bottomRight.y * scaleY
       }
     }
-
     return scaled
   }
 
@@ -314,7 +315,7 @@ export const Map = () => {
     { label: '-1.5°C', color: 'rgb(30, 120, 240)' },
     { label: '-1°C', color: 'rgb(60, 160, 255)' },
     { label: '-0.5°C', color: 'rgb(120, 200, 255)' },
-    { label: '0°C', color: 'rgb(255, 255, 255)' },
+    { label: '0°C', color: 'rgba(208, 208, 208, 1)' },
     { label: '+1°C', color: 'rgb(255, 245, 120)' },
     { label: '+1.5°C', color: 'rgb(255, 220, 80)' },
     { label: '+2°C', color: 'rgb(255, 190, 50)' },

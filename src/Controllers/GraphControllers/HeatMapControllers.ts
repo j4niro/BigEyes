@@ -2,7 +2,7 @@ import GraphBar from "./GraphBar";
 import type { TempAnomalyArea, TempAnomalyData } from "../../Redux/Slice/DataSlice";
 import getTempAnomalyColor from "../../Utils/tempAnomalyColor";
 import type { GraphInterface } from "./GraphInterface";
-import { setCurrentLat, setCurrentYear } from "../../Redux/Slice/GlobalSlice";
+import { setCurrentLat, setYearRange } from "../../Redux/Slice/GlobalSlice";
 
 export interface heatMapControllerProperties {
     allAreas : TempAnomalyData;
@@ -40,7 +40,7 @@ export default class HeatMapController implements GraphInterface {
     };
 
     setYear(year:number) {
-            this.dispatch(setCurrentYear(year));
+            this.dispatch(setYearRange({start:year, end:2025}));
         }
     
     setLat(lat:number){
@@ -54,6 +54,8 @@ export default class HeatMapController implements GraphInterface {
 
     updateData(ar: TempAnomalyArea[]) {
         this.ar = ar;
+
+        this.drawGraph();
     }
 
     // Fonctions de conversion
