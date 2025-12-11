@@ -12,7 +12,7 @@ import start from '../../public/Play_button_arrowhead.png'
 import gostart from '../../public/gostart_button.png'
 import goend from '../../public/goend_button.png'
 import earthImage from '../../public/earth.png'
-import { setYearRange, setMapHeight, setMapDimensions, setAreaScaledCoordinates, showGraphViewer } from '../Redux/Slice/GlobalSlice'
+import { setYearRange, setMapDimensions, setAreaScaledCoordinates, alertMapHeight, setMapLayout } from '../Redux/Slice/GlobalSlice'
 
 export const Map = () => {
   const dispatch = useAppDispatch()
@@ -24,7 +24,9 @@ export const Map = () => {
   const currentSelectionMode = useAppSelector(state => state.globalState.currentSelectionMode)
   // const mapHeight = useAppSelector(state => state.globalState.mapHeight) 
   const mapDimensions = useAppSelector(state => state.globalState.mapDimensions) 
-  const showingGraphViewer = useAppSelector(state => state.globalState.showGraphViewer) 
+
+  const viewerLayout = useAppSelector(state => state.globalState.screenLayout.viewerLayout) 
+
   const areaInCache = useAppSelector(state => state.globalState.areaCached) 
 
   const mapWrapperRef = useRef<HTMLDivElement>(null)
@@ -71,6 +73,22 @@ export const Map = () => {
   useEffect(() => {
     mapController.setSelectionMode(currentSelectionMode)
   }, [currentSelectionMode, mapController])
+
+  useEffect(() => {
+    switch (viewerLayout) {
+      case 0:
+        setMapHeight(window.innerHeight);
+        break;
+
+      case 0.4:
+        setMapHeight(window.innerHeight * 0.6);
+        break;
+
+      case 0.8:
+        setMapHeight(window.innerHeight * 0.2);
+        break;
+    }
+  }, [viewerLayout])
 
   useEffect(() => {
     if(!areaInCache) return;
@@ -149,19 +167,13 @@ export const Map = () => {
     }
   }, [animationController])
 
-  // Gestion du resize
-  const handleResizeMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsResizing(true)
-  }
-
   useEffect(() => {
     if (!isResizing) return
 
     const handleMouseMove = (e: MouseEvent) => {
       const newHeight = e.clientY
       setMapHeight(newHeight)
+      dispatch(alertMapHeight(newHeight))
     }
 
     const handleMouseUp = () => {
@@ -280,8 +292,13 @@ export const Map = () => {
   }
 
   const handleZoomClick = () => {
-    dispatch(showGraphViewer());
-    !showingGraphViewer ? setMapHeight(window.innerHeight * 0.6) : setMapHeight(window.innerHeight) ;
+    if(viewerLayout !== 0){
+      setMapHeight(window.innerHeight)
+      dispatch(setMapLayout(1))
+    }else{
+      setMapHeight(window.innerHeight * 0.6)
+      dispatch(setMapLayout(0.6))
+    }
   }
 
   const handleGoToStart = () => {
@@ -677,14 +694,14 @@ export const Map = () => {
           className='control-section zoom-section'
           onClick={handleZoomClick}
         >
-          {showingGraphViewer ? <FiMinimize size={20} /> : <FiMaximize size={20} />}
+          {viewerLayout !== 0 ? <FiMinimize size={20} /> : <FiMaximize size={20} />}
         </button>
       </div>
 
       <div 
         className='map-resize-handle'
-        onMouseDown={handleResizeMouseDown}
-        style={{ cursor: 'ns-resize' }}
+        // onMouseDown={handleResizeMouseDown}
+        // style={{ cursor: 'ns-resize' }}
       >
         <div className='resize-bar' />
       </div>

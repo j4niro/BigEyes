@@ -57,7 +57,10 @@ export type viewsDisposition = {
   disposition: viewDisposition[];
 };
 
-
+export type screenLayoutState = {
+    mapLayout : 1 | 0.6 | 0.2 ;
+    viewerLayout : 0 | 0.4 | 0.8 ;
+}
 
 export type YearRange = { // if start === end then only one year is selected
     start:number,
@@ -71,7 +74,7 @@ export type GlobalState = {
 
     currentSelectionMode: SelectionMode,
 
-    mapHeight: number,
+    mapHeightIndicator: number|null,
 
     yearRange : YearRange,
     // currentYear : number,
@@ -91,13 +94,16 @@ export type GlobalState = {
     currentLong:number,
 
     viewOrder: ViewKey[],
-    viewerHeight:number,
 
     mapDimensions:{width:number, height:number},
 
     showGraphViewer:boolean,
 
     areaCached:{lat:number, lon:number}|null,
+
+    viewerIsInGrid:boolean,
+
+    screenLayout:screenLayoutState,
 }
 
 const initialState: GlobalState = {
@@ -120,8 +126,8 @@ const initialState: GlobalState = {
     currentAreaId: null,
     areaGroups: [],
     nextGroupId: 1,
-    mapHeight : 430,
-    viewerHeight: 300,
+    mapHeightIndicator : null,
+    viewerIsInGrid : false,
 
     mapDimensions:{width:0, height:0},
 
@@ -130,6 +136,11 @@ const initialState: GlobalState = {
     showGraphViewer:true,
 
     areaCached:null,
+
+    screenLayout:{
+        mapLayout : 1,
+        viewerLayout : 0,
+    }
 }
 
 const globalSlice = createSlice({
@@ -268,41 +279,54 @@ const globalSlice = createSlice({
         //     state.currentYear = action.payload;
         // },
 
-        setMapHeight: (state, action: PayloadAction<number>) => {
-            const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 900;
-            const minMap = 150;
-            const maxMap = windowHeight; // garder un viewer minimal
-
-            state.mapHeight = Math.max(minMap, Math.min(action.payload, maxMap));
-            state.viewerHeight = windowHeight - state.mapHeight;
+        alertMapHeight: (state, action: PayloadAction<number>) => {
+            state.mapHeightIndicator = action.payload;
         },
-
-        setViewerHeight: (state, action: PayloadAction<number>) => {
-            const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 900;
-            const minViewer = 150;
-            const maxViewer = windowHeight - 150;
-
-            state.viewerHeight = Math.max(minViewer, Math.min(action.payload, maxViewer));
-            state.mapHeight = windowHeight - state.viewerHeight;
-        },
-
 
         reorderViews: (state, action: PayloadAction<ViewKey[]>) => {
             state.viewOrder = action.payload;
         },
 
-        showGraphViewer : (state) =>{
-            const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 900;
+        showGraphViewer : (state, action: PayloadAction<string>) =>{
+            state.showGraphViewer = action.payload === "show" ? true : false;
+        },
 
-            state.showGraphViewer = !state.showGraphViewer;
+        setMapLayout : (state, action: PayloadAction<1 | 0.6 | 0.2>) =>{
+            state.screenLayout.mapLayout = action.payload ;
+            switch (state.screenLayout.mapLayout) {
+                case 1:
+                    state.screenLayout.viewerLayout = 0
+                    break;
 
-            if (state.showGraphViewer) {
-                state.viewerHeight = 300;
-                state.mapHeight = windowHeight - state.viewerHeight;
-            } else {
-                state.mapHeight += state.viewerHeight;
-                state.viewerHeight = 0;
+                case 0.6:
+                    state.screenLayout.viewerLayout = 0.4
+                    break;
+
+                case 0.2:
+                    state.screenLayout.viewerLayout = 0.8
+                    break;
             }
+        },
+
+        setViewerLayout : (state, action: PayloadAction<0 | 0.4 | 0.8>) =>{
+            state.screenLayout.viewerLayout = action.payload ;
+            switch (state.screenLayout.viewerLayout) {
+                case 0:
+                    state.screenLayout.mapLayout = 1
+                    break;
+
+                case 0.4:
+                    state.screenLayout.mapLayout = 0.6
+                    break;
+
+                case 0.8:
+                    state.screenLayout.mapLayout = 0.2
+                    break;
+            }
+        },
+
+        switchViewerLayout : (state, action: PayloadAction<string>) =>{
+            state.viewerIsInGrid = action.payload === "grid" ? true : false;
         },
 
 
@@ -342,7 +366,6 @@ export const {
     addLatitudeSelected, 
     deleteLatitudeSelected, 
     setYearRange, 
-    setViewerHeight,
     deleteAreaSelected, 
     reorderViews,
     addAreaSelected,
@@ -353,12 +376,16 @@ export const {
     removeAreaFromGroup,
     deleteGroup,
     updateGroupName,
-    setMapHeight,
+    alertMapHeight,
     setCurrentLat,
     setCurrentLong,
     setMapDimensions,
     setAreaScaledCoordinates,
     showGraphViewer,
     setAreaToCache,
+    switchViewerLayout,
+
+    setMapLayout,
+    setViewerLayout,
 } = globalSlice.actions
 export default globalSlice.reducer// Redux/Slice/GlobalSlice.ts

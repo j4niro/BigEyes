@@ -8,41 +8,34 @@ import { Map } from './Components/Map'
 import GraphView from "./Components/GraphView"
 import ViewList from "./Components/ViewList"
 // import { setMapHeight, setViewerHeight } from "./Redux/Slice/GlobalSlice"
-import type { ViewKey } from "./Redux/Slice/GlobalSlice"
+import { setViewerLayout, type ViewKey } from "./Redux/Slice/GlobalSlice"
 
 function App() {
   const dispatch = useAppDispatch();
   const mapSize = useAppSelector((state) => state.data.mapSize);
 
+  const screenLayout = useAppSelector((state) => state.globalState.screenLayout);
+
   // Ordre depuis Redux
   const viewOrder = useAppSelector((state) => state.globalState.viewOrder);
   
   const [activeView, setActiveView] = useState<ViewKey>('heatmap')
-  const [layout, setLayout] = useState<"grid" | "single">("single")
   const [showSettingPan, setShowSettingPan] = useState(false)
-  const showGraphViewer = useAppSelector((state) => state.globalState.showGraphViewer);
 
   const [mapHeight, setMapHeight] = useState(window.innerHeight * 0.6);
-  const [viewerHeight, setViewerHeight] = useState(window.innerHeight * 0.4);
-
-  useEffect(() => {
-    const onResize = () => {
-      setMapHeight(window.innerHeight * 0.6);
-      setViewerHeight(window.innerHeight * 0.4);
-    };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
+  // const [viewerHeight, setViewerHeight] = useState(window.innerHeight * 0.4);
 
   useEffect(() => {
     dispatch(loadEarthImage())
   }, [dispatch])
 
   useEffect(() => {
-    setLayout(viewerHeight > 400 ? "grid" : "single")
-    setMapHeight(730-viewerHeight); 
-  }, [viewerHeight])
+    setMapHeight(window.innerHeight * screenLayout.mapLayout);
+  }, [screenLayout.mapLayout])
+
+  useEffect(() => {
+    setMapHeight(window.innerHeight * screenLayout.viewerLayout);
+  }, [screenLayout.viewerLayout])
 
   // --- NOUVEAU : SCROLL AUTOMATIQUE ---
   useEffect(() => {
@@ -60,6 +53,10 @@ function App() {
   const getGraphType = (key: ViewKey) => {
     if (key === 'graph') return 'standard';
     return key;
+  }
+
+  const setViewerLayoutFromViewList = (h:0|0.8|0.4) =>{
+    dispatch(setViewerLayout(h));
   }
 
   if (!mapSize) return <p>Loading map...</p>
@@ -91,20 +88,17 @@ function App() {
       
       <Map />
 
-      <div className="graph-viewer" style={{ height: `${viewerHeight}px`, visibility : `${showGraphViewer? "visible":"hidden"}`}}> 
+      <div className="graph-viewer" style={{ height: `${window.innerHeight * screenLayout.viewerLayout}px`, visibility : `${screenLayout.viewerLayout !== 0 ? "visible":"hidden"}`}}> 
         
         <ViewList 
           activeView={activeView} 
           setActiveView={setActiveView}
-          viewerHeight={viewerHeight}
-          onHeightChange={(h)=>{setViewerHeight(h)}}
-          layout={layout}
-          setLayout={setLayout}
+          onHeightChange={(h)=>{h === 0 || h === 0.8 || h === 0.4 ? setViewerLayoutFromViewList(h) : null}}
         />
 
         <div className="graph-viewer-main">
           {/* Ajout de scroll-behavior: smooth en CSS est aussi recommandé sur ce conteneur */}
-          <div className={`graph-viewer-content layout-${layout}`}>
+          <div className={`graph-viewer-content layout-${screenLayout.viewerLayout === 0.8 ? "grid" : "single"}`}>
             
             {viewOrder.map((viewKey) => (
               <div 
@@ -117,6 +111,7 @@ function App() {
                     type={getGraphType(viewKey)} 
                     offset={40} 
                 />
+
               </div>
             ))}
 

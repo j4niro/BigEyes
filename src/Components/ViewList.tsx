@@ -3,16 +3,14 @@ import ReactDOM from "react-dom"; // Import nécessaire
 import { useViewListController } from "../Controllers/ViewListController";
 import { useDispatch, useSelector } from "react-redux"; 
 import type { RootState } from "../Redux/Store/Store"; 
-import { reorderViews, type ViewKey } from "../Redux/Slice/GlobalSlice";
+import { reorderViews, setViewerLayout, type ViewKey } from "../Redux/Slice/GlobalSlice";
+import { useAppSelector } from "../Redux/Hooks/StoreHooks";
 
 
 interface ViewListProps {
   activeView: "heatmap" | "histogram" | "graph" | "regression";
   setActiveView: (view: "heatmap" | "histogram" | "graph" | "regression") => void;
-  viewerHeight: number;
-  onHeightChange: (height: number) => void;
-  layout: "grid" | "single";
-  setLayout: (layout: "grid" | "single") => void;
+  onHeightChange: (height: 0|0.8|0.4) => void;
 }
 
 // Composant utilitaire pour le Tooltip Portail
@@ -66,10 +64,7 @@ const viewConfig: Record<ViewKey, { icon: string; label: string; desc: string }>
 export default function ViewList({ 
   activeView, 
   setActiveView, 
-  viewerHeight, 
   onHeightChange,
-  layout,
-  setLayout 
 }: ViewListProps) {
   
   const dispatch = useDispatch();
@@ -77,7 +72,10 @@ export default function ViewList({
   // 1. Lecture de l'ordre depuis Redux (Source de vérité)
   const viewOrder = useSelector((state: RootState) => state.globalState.viewOrder);
 
-  const controller = useViewListController({ viewerHeight, onHeightChange, setLayout });
+  //gestion du layout de l'écran
+  const viewerLayout = useAppSelector((state)=>state.globalState.screenLayout.viewerLayout);
+
+  useViewListController({onHeightChange});
   
   // Refs pour le Drag & Drop
   const dragItemIndex = useRef<number | null>(null);
@@ -130,15 +128,6 @@ export default function ViewList({
 
   return (
     <>
-      {/* La poignée de redimensionnement */}
-
-      <div 
-        className="resize-handle-trigger"
-        onMouseDown={controller.handleMouseDown}
-        title="Glisser pour redimensionner"
-      >
-          <div className="resize-handle-visual"></div>
-      </div>
 
       <div className="graph-viewer-left">
         <div className="views-list-label">Views List</div>
@@ -146,15 +135,15 @@ export default function ViewList({
         {/* --- 1. BOUTONS DE LAYOUT (FIXES EN HAUT) --- */}
         <div className="layout-buttons-container">
             <button
-                className={`layout-btn ${layout === "grid" ? "active" : ""}`}
-                onClick={controller.switchToGrid}
+                className={`layout-btn ${viewerLayout === 0.8 ? "active" : ""}`}
+                onClick={()=>{dispatch(setViewerLayout(0.8))}}
                 title="Grille (2x2)"
             >
                 ⊞
             </button>
             <button
-                className={`layout-btn ${layout === "single" ? "active" : ""}`}
-                onClick={controller.switchToSingle}
+                className={`layout-btn ${viewerLayout === 0.4 ? "active" : ""}`}
+                onClick={()=>{dispatch(setViewerLayout(0.4))}}
                 title="Ligne (Horizontal)"
             >
                 ☰
