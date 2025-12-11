@@ -271,7 +271,7 @@ const globalSlice = createSlice({
         setMapHeight: (state, action: PayloadAction<number>) => {
             const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 900;
             const minMap = 150;
-            const maxMap = windowHeight - 150; // garder un viewer minimal
+            const maxMap = windowHeight; // garder un viewer minimal
 
             state.mapHeight = Math.max(minMap, Math.min(action.payload, maxMap));
             state.viewerHeight = windowHeight - state.mapHeight;
