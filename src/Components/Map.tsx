@@ -22,7 +22,6 @@ export const Map = () => {
   const areaGroups = useAppSelector(state => state.globalState.areaGroups)
   const yearRange = useAppSelector(state => state.globalState.yearRange)
   const currentSelectionMode = useAppSelector(state => state.globalState.currentSelectionMode)
-  // const mapHeight = useAppSelector(state => state.globalState.mapHeight) 
   const mapDimensions = useAppSelector(state => state.globalState.mapDimensions) 
 
   const viewerLayout = useAppSelector(state => state.globalState.screenLayout.viewerLayout) 
@@ -49,7 +48,7 @@ export const Map = () => {
   const [dragStart, setDragStart] = useState<{x: number, y: number} | null>(null)
   const [dragCurrent, setDragCurrent] = useState<{x: number, y: number} | null>(null)
 
-  const [isPlaying, setIsPlaying] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(true)
   const [speed, setSpeed] = useState<1 | 1.5 | 2>(1)
   const [showSpeedMenu, setShowSpeedMenu] = useState(false)
 
@@ -62,6 +61,7 @@ export const Map = () => {
 
 
   useEffect(() => {
+    setIsPlaying(true);
     const onResize = () => {
       setMapHeight(window.innerHeight * 0.6);
     };
