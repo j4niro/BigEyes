@@ -7,15 +7,13 @@ import { SettingPan } from './Components/SettingPan'
 import { Map } from './Components/Map'
 import GraphView from "./Components/GraphView"
 import ViewList from "./Components/ViewList"
-import { setMapHeight, setViewerHeight } from "./Redux/Slice/GlobalSlice"
+// import { setMapHeight, setViewerHeight } from "./Redux/Slice/GlobalSlice"
 import type { ViewKey } from "./Redux/Slice/GlobalSlice"
 
 function App() {
   const dispatch = useAppDispatch();
   const mapSize = useAppSelector((state) => state.data.mapSize);
-  const mapHeight = useAppSelector((state) => state.globalState.mapHeight);
-  const viewerHeight = useAppSelector((state) => state.globalState.viewerHeight);
-  
+
   // Ordre depuis Redux
   const viewOrder = useAppSelector((state) => state.globalState.viewOrder);
   
@@ -24,13 +22,26 @@ function App() {
   const [showSettingPan, setShowSettingPan] = useState(false)
   const showGraphViewer = useAppSelector((state) => state.globalState.showGraphViewer);
 
+  const [mapHeight, setMapHeight] = useState(window.innerHeight * 0.6);
+  const [viewerHeight, setViewerHeight] = useState(window.innerHeight * 0.4);
+
+  useEffect(() => {
+    const onResize = () => {
+      setMapHeight(window.innerHeight * 0.6);
+      setViewerHeight(window.innerHeight * 0.4);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+
   useEffect(() => {
     dispatch(loadEarthImage())
   }, [dispatch])
 
   useEffect(() => {
     setLayout(viewerHeight > 400 ? "grid" : "single")
-    dispatch(setMapHeight(730-viewerHeight)); 
+    setMapHeight(730-viewerHeight); 
   }, [viewerHeight])
 
   // --- NOUVEAU : SCROLL AUTOMATIQUE ---
@@ -86,7 +97,7 @@ function App() {
           activeView={activeView} 
           setActiveView={setActiveView}
           viewerHeight={viewerHeight}
-          onHeightChange={(h)=>{dispatch(setViewerHeight(h))}}
+          onHeightChange={(h)=>{setViewerHeight(h)}}
           layout={layout}
           setLayout={setLayout}
         />

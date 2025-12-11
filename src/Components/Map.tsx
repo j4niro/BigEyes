@@ -22,7 +22,7 @@ export const Map = () => {
   const areaGroups = useAppSelector(state => state.globalState.areaGroups)
   const yearRange = useAppSelector(state => state.globalState.yearRange)
   const currentSelectionMode = useAppSelector(state => state.globalState.currentSelectionMode)
-  const mapHeight = useAppSelector(state => state.globalState.mapHeight) 
+  // const mapHeight = useAppSelector(state => state.globalState.mapHeight) 
   const mapDimensions = useAppSelector(state => state.globalState.mapDimensions) 
   const showingGraphViewer = useAppSelector(state => state.globalState.showGraphViewer) 
   const areaInCache = useAppSelector(state => state.globalState.areaCached) 
@@ -55,6 +55,18 @@ export const Map = () => {
 
   const mapController = useMemo(() => new MapController(dispatch), [dispatch])
   const animationController = useMemo(() => new AnimationController(dispatch), [dispatch])
+
+  const [mapHeight, setMapHeight] = useState(window.innerHeight * 0.6);
+
+
+  useEffect(() => {
+    const onResize = () => {
+      setMapHeight(window.innerHeight * 0.6);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
 
   useEffect(() => {
     mapController.setSelectionMode(currentSelectionMode)
@@ -149,7 +161,7 @@ export const Map = () => {
 
     const handleMouseMove = (e: MouseEvent) => {
       const newHeight = e.clientY
-      dispatch(setMapHeight(newHeight))
+      setMapHeight(newHeight)
     }
 
     const handleMouseUp = () => {
@@ -269,6 +281,7 @@ export const Map = () => {
 
   const handleZoomClick = () => {
     dispatch(showGraphViewer());
+    !showingGraphViewer ? setMapHeight(window.innerHeight * 0.6) : setMapHeight(window.innerHeight) ;
   }
 
   const handleGoToStart = () => {
