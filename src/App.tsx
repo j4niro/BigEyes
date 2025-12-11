@@ -21,7 +21,8 @@ function App() {
   
   const [activeView, setActiveView] = useState<ViewKey>('heatmap')
   const [layout, setLayout] = useState<"grid" | "single">("single")
-  const [showSettingPan, setShowSettingPan] = useState(true)
+  const [showSettingPan, setShowSettingPan] = useState(false)
+  const showGraphViewer = useAppSelector((state) => state.globalState.showGraphViewer);
 
   useEffect(() => {
     dispatch(loadEarthImage())
@@ -58,10 +59,15 @@ function App() {
       <button 
         className='toggle-setting-pan-btn'
         onClick={() => setShowSettingPan(!showSettingPan)}
-        title={showSettingPan ? "Masquer Settings" : "Afficher Settings"}
+        title={showSettingPan ? "Hide Settings Pan" : "Display Settings Pan"}
       >
-        {showSettingPan ? '◀' : '▶'}
+        {showSettingPan ? (
+          <span style={{ fontSize: "1.2rem" }}>✖</span> // croix
+        ) : (
+          <span style={{ fontSize: "1.2rem" }}>⚙️</span> // paramètre
+        )}
       </button>
+
 
       {showSettingPan && (
         <div 
@@ -74,7 +80,7 @@ function App() {
       
       <Map />
 
-      <div className="graph-viewer" style={{ height: `${viewerHeight}px` }}> 
+      <div className="graph-viewer" style={{ height: `${viewerHeight}px`, visibility : `${showGraphViewer? "visible":"hidden"}`}}> 
         
         <ViewList 
           activeView={activeView} 

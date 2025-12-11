@@ -1,7 +1,7 @@
 import GraphBar from "./GraphBar";
 import type { TempAnomalyArea, TempAnomalyData } from "../../Redux/Slice/DataSlice";
 import type { GraphInterface } from "./GraphInterface";
-import { setCurrentLong } from "../../Redux/Slice/GlobalSlice";
+import { setCurrentLong, addLatitudeSelected, addAreaSelected, setAreaToCache } from "../../Redux/Slice/GlobalSlice";
 
 export interface histogramControllerProperties {
     allAreas: TempAnomalyData;
@@ -34,6 +34,7 @@ export default class HistogramController implements GraphInterface {
     private an: number;
     private minTemp: number = 0;
     private maxTemp: number = 0;
+    private cachedArea:{lat:number, lon:number}|null = null;
     
     // --- Objets Graphiques (Ta classe) ---
     // On stocke les instances ici pour ne pas les recréer à chaque draw()
@@ -210,8 +211,7 @@ export default class HistogramController implements GraphInterface {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         if (this.barsRef.length === 0) {
-            this.drawEmptyData();
-            this.drawGraduations(); 
+            this.drawEmptyData(); 
             return;
         }
 
@@ -224,8 +224,11 @@ export default class HistogramController implements GraphInterface {
         // Ici on ne fait aucun calcul, juste du dessin -> Très performant
         for (const bar of this.barsRef) {
             // On peut passer undefined pour utiliser la couleur par défaut définie dans le constructeur de GraphBar
-            bar.draw(undefined); 
+            bar.draw(); 
         }
+
+        const barselected = this.barsRef.find((o)=>o.getInfo().lat === this.cachedArea?.lat && o.getInfo().lon === this.cachedArea?.lon );
+        barselected?.draw("red");
     }
     
     // ========================================================================
@@ -235,7 +238,8 @@ export default class HistogramController implements GraphInterface {
     handleMouseDown = (event: React.MouseEvent) => {
         const data = this.detectClick(event);
         if (data) {
-            this.setLong(data.lon);
+            this.cachedArea = {lat:data.lat, lon:data.lon};
+            this.dispatch(setAreaToCache(this.cachedArea));
         }
     };
 
@@ -372,17 +376,28 @@ export default class HistogramController implements GraphInterface {
                 const lon = -178 + 4 * i;
                 this.ctx.beginPath();
                 this.ctx.moveTo(xx, this.offsetY + this.height);
-                this.ctx.lineTo(xx, this.offsetY + this.height + 5);
+                this.ctx.lineTo(xx, this.offsetY + this.height + 10);
                 this.ctx.stroke();
                 this.ctx.fillText(Math.round(lon).toString(), xx - 5, this.offsetY + this.height + 20);
+            }else{
+                this.ctx.beginPath();
+                this.ctx.moveTo(xx, this.offsetY + this.height);
+                this.ctx.lineTo(xx, this.offsetY + this.height + 5);
+                this.ctx.stroke();
             }
         }
         
-        // Labels axes
+        // Labels axis Y
         this.ctx.save();
-        this.ctx.translate((this.offsetX) / 3, this.width / 2);
+        this.ctx.translate(this.offsetX / 3, this.width / 2);
         this.ctx.rotate(-Math.PI / 2);
-        this.ctx.fillText("Mean Temperature", 0, 0); // Position simplifiée
+        this.ctx.fillText("Mean Anomalies", this.offsetX / 2, 0);
+        this.ctx.restore();
+
+        // Labels axis X
+        this.ctx.save();
+        this.ctx.textAlign = "center";
+        this.ctx.fillText("Longitude", this.width /2 + this.offsetX, this.height + this.offsetY*(5/3)+5); // Position simplifiée
         this.ctx.restore();
     }
 

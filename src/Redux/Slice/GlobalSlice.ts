@@ -94,6 +94,10 @@ export type GlobalState = {
     viewerHeight:number,
 
     mapDimensions:{width:number, height:number},
+
+    showGraphViewer:boolean,
+
+    areaCached:{lat:number, lon:number}|null,
 }
 
 const initialState: GlobalState = {
@@ -122,6 +126,10 @@ const initialState: GlobalState = {
     mapDimensions:{width:0, height:0},
 
     viewOrder: ["heatmap", "histogram", "graph", "regression"],
+
+    showGraphViewer:true,
+
+    areaCached:null,
 }
 
 const globalSlice = createSlice({
@@ -156,6 +164,10 @@ const globalSlice = createSlice({
 
         setCurrentLat : (state, action:PayloadAction<number>)=>{
             state.currentLat = action.payload;
+        },
+
+        setAreaToCache : (state, action:PayloadAction<{lat:number, lon:number}>)=>{
+            state.areaCached = action.payload;
         },
 
         deleteAreaSelected : (state, action:PayloadAction<number>)=>{
@@ -258,18 +270,41 @@ const globalSlice = createSlice({
 
         setMapHeight: (state, action: PayloadAction<number>) => {
             const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 900;
-            state.mapHeight = Math.max(300, Math.min(action.payload, windowHeight - 100));
+            const minMap = 150;
+            const maxMap = windowHeight - 150; // garder un viewer minimal
+
+            state.mapHeight = Math.max(minMap, Math.min(action.payload, maxMap));
+            state.viewerHeight = windowHeight - state.mapHeight;
         },
 
-        setViewerHeight:(state, action: PayloadAction<number>) => {
+        setViewerHeight: (state, action: PayloadAction<number>) => {
             const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 900;
-            state.viewerHeight = action.payload ; 
-            state.mapHeight = Math.max(300, Math.min(action.payload, windowHeight - state.viewerHeight));
+            const minViewer = 150;
+            const maxViewer = windowHeight - 150;
+
+            state.viewerHeight = Math.max(minViewer, Math.min(action.payload, maxViewer));
+            state.mapHeight = windowHeight - state.viewerHeight;
         },
+
 
         reorderViews: (state, action: PayloadAction<ViewKey[]>) => {
             state.viewOrder = action.payload;
         },
+
+        showGraphViewer : (state) =>{
+            const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 900;
+
+            state.showGraphViewer = !state.showGraphViewer;
+
+            if (state.showGraphViewer) {
+                state.viewerHeight = 300;
+                state.mapHeight = windowHeight - state.viewerHeight;
+            } else {
+                state.mapHeight += state.viewerHeight;
+                state.viewerHeight = 0;
+            }
+        },
+
 
         setAreaScaledCoordinates : (state, action:PayloadAction<Area>)=>{
             const areaToUpdate = state.selectedAreas.find((area)=>area.id === action.payload.id);
@@ -323,5 +358,7 @@ export const {
     setCurrentLong,
     setMapDimensions,
     setAreaScaledCoordinates,
+    showGraphViewer,
+    setAreaToCache,
 } = globalSlice.actions
 export default globalSlice.reducer// Redux/Slice/GlobalSlice.ts

@@ -3,6 +3,7 @@ import './Map.css'
 import { useAppDispatch, useAppSelector } from '../Redux/Hooks/StoreHooks'
 import { MapController } from '../Controllers/MapController'
 import { AnimationController } from '../Controllers/AnimationController'
+import { FiMaximize, FiMinimize } from "react-icons/fi";
 import { AnomalyCanvas } from './AnomalyCanvas'
 import plus10 from '../../public/+10button.png'
 import moins10 from '../../public/-10button.png'
@@ -11,7 +12,7 @@ import start from '../../public/Play_button_arrowhead.png'
 import gostart from '../../public/gostart_button.png'
 import goend from '../../public/goend_button.png'
 import earthImage from '../../public/earth.png'
-import { setYearRange, setMapHeight, setMapDimensions, setAreaScaledCoordinates } from '../Redux/Slice/GlobalSlice'
+import { setYearRange, setMapHeight, setMapDimensions, setAreaScaledCoordinates, showGraphViewer } from '../Redux/Slice/GlobalSlice'
 
 export const Map = () => {
   const dispatch = useAppDispatch()
@@ -23,6 +24,8 @@ export const Map = () => {
   const currentSelectionMode = useAppSelector(state => state.globalState.currentSelectionMode)
   const mapHeight = useAppSelector(state => state.globalState.mapHeight) 
   const mapDimensions = useAppSelector(state => state.globalState.mapDimensions) 
+  const showingGraphViewer = useAppSelector(state => state.globalState.showGraphViewer) 
+  const areaInCache = useAppSelector(state => state.globalState.areaCached) 
 
   const mapWrapperRef = useRef<HTMLDivElement>(null)
   const [currentYear, setCurrentYear] = useState(yearRange.start)
@@ -56,6 +59,11 @@ export const Map = () => {
   useEffect(() => {
     mapController.setSelectionMode(currentSelectionMode)
   }, [currentSelectionMode, mapController])
+
+  useEffect(() => {
+    if(!areaInCache) return;
+    mapController.selectSquareAtCoordinates(areaInCache.lat, areaInCache.lon, mapDimensions.width, mapDimensions.height);
+  }, [areaInCache])
 
   useEffect(() => {
     setCurrentYear(yearRange.start)
@@ -259,6 +267,10 @@ export const Map = () => {
     animationController.next10Years(currentYear)
   }
 
+  const handleZoomClick = () => {
+    dispatch(showGraphViewer());
+  }
+
   const handleGoToStart = () => {
     if (isPlaying) {
       animationController.pause()
@@ -315,7 +327,7 @@ export const Map = () => {
     { label: '-1.5°C', color: 'rgb(30, 120, 240)' },
     { label: '-1°C', color: 'rgb(60, 160, 255)' },
     { label: '-0.5°C', color: 'rgb(120, 200, 255)' },
-    { label: '0°C', color: 'rgba(208, 208, 208, 1)' },
+    { label: '0°C', color: 'rgba(162, 162, 162, 1)' },
     { label: '+1°C', color: 'rgb(255, 245, 120)' },
     { label: '+1.5°C', color: 'rgb(255, 220, 80)' },
     { label: '+2°C', color: 'rgb(255, 190, 50)' },
@@ -391,7 +403,7 @@ export const Map = () => {
         {selectedAreas.map(area => {
           const scaledArea = getScaledAreaCoordinates(area)
           const group = areaGroups.find(g => g.id === area.groupId)
-          const borderColor = group ? group.color : '#00FF00'
+          const borderColor = group ? group.color : '#25c900ff'
           
           return (
             <div
@@ -445,14 +457,14 @@ export const Map = () => {
                 fontSize: '11px',
                 fontFamily: 'montserrat, sans-serif',
                 minWidth: '180px',
-                border: group ? `2px solid ${group.color}` : '2px solid #00FF00'
+                border: group ? `2px solid ${group.color}` : '2px solid #25c900ff'
               }}
             >
               <div style={{ 
                 fontWeight: 'bold', 
                 fontSize: '12px', 
                 marginBottom: '6px',
-                color: group ? group.color : '#00FF00'
+                color: group ? group.color : '#25c900ff'
               }}>
                 {area.name}
               </div>
@@ -488,7 +500,7 @@ export const Map = () => {
               top: `${Math.min(dragStart.y, dragCurrent.y)}px`,
               width: `${Math.abs(dragCurrent.x - dragStart.x)}px`,
               height: `${Math.abs(dragCurrent.y - dragStart.y)}px`,
-              border: '2px dashed #00FF00',
+              border: '2px dashed #25c900ff',
               backgroundColor: 'rgba(0, 255, 0, 0.1)',
               pointerEvents: 'none',
               zIndex: 25,
@@ -524,7 +536,7 @@ export const Map = () => {
             whiteSpace: 'nowrap',
             marginRight: '4px'
           }}>
-            Anomalie:
+            Anomalies:
           </span>
           
           {legendData.map((item, index) => (
@@ -648,8 +660,11 @@ export const Map = () => {
           </button>
         </div>
 
-        <button className='control-section zoom-section'>
-          Zoom
+        <button
+          className='control-section zoom-section'
+          onClick={handleZoomClick}
+        >
+          {showingGraphViewer ? <FiMinimize size={20} /> : <FiMaximize size={20} />}
         </button>
       </div>
 

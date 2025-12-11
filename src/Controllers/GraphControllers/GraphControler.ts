@@ -35,9 +35,20 @@ export default class GraphController implements GraphInterface {
         means: YearValue[];
     }> = [];
 
+    private points: Array<{
+        x: number;
+        y: number;
+        value: number;
+        year: number;
+        color: string;
+    }> = [];
+
+
     private extremValues = { min: 100, max: -100 };
 
     private dispatch : (func:any)=>any;
+
+    private isEmpty:boolean = true;
 
     constructor(props:graphControllerProperties) {
         
@@ -103,9 +114,10 @@ export default class GraphController implements GraphInterface {
 
     handleMouseDown = (event: React.MouseEvent) => {
 
-            const year = this.onMouseDown(event);
-            if(year === undefined) return ;
-            this.setYear(Math.round(year));
+        if(this.isEmpty) return ;
+        const year = this.onMouseDown(event);
+        if(year === undefined) return ;
+        this.setYear(Math.round(year));
         
     };
 
@@ -117,6 +129,8 @@ export default class GraphController implements GraphInterface {
 
         this.width = this.canvas.width - this.offset * 2;
         this.height = this.canvas.height - this.offset * 2;
+
+        this.canvas.addEventListener("mousemove", this.handleMouseMove);
     }
 
     updateData(areaP:{tempA:TempAnomalyArea, groupId:number, color:string}[], an: number) {
@@ -144,6 +158,61 @@ export default class GraphController implements GraphInterface {
         this.ctx.lineWidth = 1.5;
         this.ctx.stroke();
     }
+
+    private drawTooltip(p: { x: number; y: number; value: number; year: number; color: string }) {
+        if (!this.ctx) return;
+
+        this.ctx.save();
+        const text = `${p.year} : ${p.value.toFixed(3)}°C`;
+        this.ctx.font = "12px Verdana";
+
+        const padding = 4;
+        const w = this.ctx.measureText(text).width + padding * 2;
+        const h = 18;
+
+        const x = p.x + 10 + w > this.width ? p.x - w : p.x + 10  ;
+        const y = p.y - 10;
+
+        // Fond blanc
+        this.ctx.fillStyle = "white";
+        this.ctx.fillRect(x, y - h, w, h);
+
+        // Bordure
+        this.ctx.strokeStyle = p.color;
+        this.ctx.strokeRect(x, y - h, w, h);
+
+        // Texte
+        this.ctx.fillStyle = "black";
+        this.ctx.fillText(text, x + padding, y - 4);
+        this.ctx.restore();
+    }
+
+    handleMouseMove = (event: MouseEvent) => {
+        if (!this.canvas || !this.ctx) return;
+
+        const rect = this.canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        let hoveredPoint = null;
+
+        for (const p of this.points) {
+            const dx = mouseX - p.x;
+            const dy = mouseY - p.y;
+            if (Math.sqrt(dx*dx + dy*dy) < 3) { // marge de 3px
+                hoveredPoint = p;
+                break;
+            }
+        }
+
+        this.redrawGraph();
+
+        if (hoveredPoint) {
+            this.drawTooltip(hoveredPoint);
+        }
+    };
+
+
 
     onMouseDown(event: React.MouseEvent): number|undefined {
         if (!this.canvas) return;
@@ -186,7 +255,7 @@ export default class GraphController implements GraphInterface {
         this.ctx.save();
         this.ctx.translate(this.offsetX / 3, this.width / 2);
         this.ctx.rotate(-Math.PI / 2);
-        this.ctx.fillText("mean temperature", this.offsetX / 2, 0);
+        this.ctx.fillText("Mean Anomalies", this.offsetX / 2, 0);
         this.ctx.restore();
 
         // Flèche Y
@@ -346,6 +415,11 @@ export default class GraphController implements GraphInterface {
 
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.initializeData();
+
+        if (this.allMeanData.length === 0 ){this.drawEmptyData(); return};
+
+        this.isEmpty = false;
+
         this.drawAxis();
 
         const scale = this.drawGraduations();
@@ -409,12 +483,32 @@ export default class GraphController implements GraphInterface {
             this.ctx.arc(x, y, 2, 0, Math.PI * 2);
             this.ctx.fillStyle = color;
             this.ctx.fill();
+
+            this.points.push({
+                x: x,
+                y: y,
+                value: val,
+                year: yv.year,
+                color: color
+            });
+
         }
     }
 
     //----------------------------------------------
     redrawGraph() {
         this.drawGraph();
+    }
+
+    drawEmptyData(): void {
+        if (!this.canvas || !this.ctx) return;
+        this.ctx.save();
+        this.ctx.textAlign = "center";
+        this.ctx.font = "15px Verdana";
+        this.ctx.fillText("No data available...", this.width / 2 + this.offsetX, this.height / 2 + this.offsetY);
+        this.ctx.restore();
+
+        this.isEmpty = true;
     }
 
     // (le reste identique : drawAxis, drawGraduations, onMouseDown…)

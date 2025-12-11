@@ -46,6 +46,8 @@ export default class RegressionController implements GraphInterface {
 
     private dispatch:(func:any)=>any;
 
+    private isEmpty:boolean = true;
+
     constructor(props:regressionControllerProperties) {
         this.ar = props.allAreas.tempanomalies;
         this.lat = props.latitudesSelected;
@@ -62,6 +64,7 @@ export default class RegressionController implements GraphInterface {
     }
 
     handleMouseDown = (event: React.MouseEvent) => {
+        if(this.isEmpty) return ;
         const year = this.onMouseDown(event);
         if(year === undefined) return ;
         this.setYear(Math.round(year));
@@ -220,13 +223,17 @@ export default class RegressionController implements GraphInterface {
         this.ctx.save();
         this.ctx.textAlign = "center";
         this.ctx.font = "15px Verdana";
-        this.ctx.fillText("No data available...", this.width / 2, this.height / 2);
+        this.ctx.fillText("No data available...", this.width / 2, this.height*3/4);
         this.ctx.restore();
+
+        this.isEmpty = true ;
         
     }
 
     drawGraph(): void {
         if (!this.canvas || !this.ctx || this.lat.length === 0) {this.drawEmptyData(); return};
+
+        this.isEmpty = false;
 
         // Reset
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -290,7 +297,7 @@ export default class RegressionController implements GraphInterface {
             // Pour alléger, on peut le commenter ou le rendre plus discret
             
             this.ctx!.fillStyle = line.color;
-            this.ctx!.globalAlpha = 0.5; // Très transparent
+            this.ctx!.globalAlpha = 0.5; // transparent
             line.points.forEach(p => {
                 this.ctx!.beginPath();
                 this.ctx!.arc(getX(p.x), getY(p.y), 2, 0, Math.PI * 2);
@@ -336,7 +343,7 @@ export default class RegressionController implements GraphInterface {
         this.ctx.save();
         this.ctx.translate(this.offsetX / 3, this.width / 2);
         this.ctx.rotate(-Math.PI / 2);
-        this.ctx.fillText("mean temperature", this.offsetX / 2, 0);
+        this.ctx.fillText("Mean Anomalies", this.offsetX / 2, 0);
         this.ctx.restore();
 
         // Flèche Y
@@ -417,7 +424,6 @@ export default class RegressionController implements GraphInterface {
             index % 15 ? this.ctx.lineTo(step, this.height + this.offsetY + 5) : this.ctx.lineTo(step, this.height + this.offsetY + 8);
             this.ctx.stroke();
             this.ctx.save();
-            //this.ctx.translate(step, this.height + this.offsetY + 15);
             index % 15 || year + index === 2025 ? null : this.ctx.fillText((year + index).toString(), step, this.height + this.offsetY + 16);
             this.ctx.restore();
         }

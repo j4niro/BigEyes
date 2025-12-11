@@ -34,8 +34,9 @@ export default class GraphBar<T> {
 
     if (color && color !== this.color) {
       this.ctx.fillStyle = color;
+      console.log("COLOR : ", color);
     }
-    
+
     this.ctx.fill(this.shape);
     this.ctx.restore();
   }

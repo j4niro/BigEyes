@@ -2,7 +2,7 @@ import GraphBar from "./GraphBar";
 import type { TempAnomalyArea, TempAnomalyData } from "../../Redux/Slice/DataSlice";
 import getTempAnomalyColor from "../../Utils/tempAnomalyColor";
 import type { GraphInterface } from "./GraphInterface";
-import { setCurrentLat, setYearRange } from "../../Redux/Slice/GlobalSlice";
+import { setCurrentLat, setYearRange, addLatitudeSelected } from "../../Redux/Slice/GlobalSlice";
 
 export interface heatMapControllerProperties {
     allAreas : TempAnomalyData;
@@ -19,6 +19,9 @@ export default class HeatMapController implements GraphInterface {
     private offsetX: number;
     private offsetY: number;
     private ar: TempAnomalyArea[];
+    // private offscreenCanvas: HTMLCanvasElement | null = null;
+    private selectedBar: GraphBar<any> | null = null;
+
 
     private dispatch:(func:any)=>any;
 
@@ -44,7 +47,11 @@ export default class HeatMapController implements GraphInterface {
         }
     
     setLat(lat:number){
-        this.dispatch(setCurrentLat(lat));
+        //this.dispatch(setCurrentLat(lat));
+        this.dispatch(addLatitudeSelected({
+            id:0, // will be updated by reducer
+            lat:lat,
+        }));
     }
 
     setCanvas(canvas: HTMLCanvasElement | null) {
@@ -106,6 +113,7 @@ export default class HeatMapController implements GraphInterface {
 
         const w = this.canvas.width - this.offset * 2;
         const h = this.canvas.height - this.offset * 2;
+
         const stepX = w / 146;
         const stepY = h / 45;
 
@@ -145,10 +153,13 @@ export default class HeatMapController implements GraphInterface {
 
         for (const bar of this.heatMatrixPaths) {
             if (bar.contains(clickX, clickY)) {
-                this.redrawGraph();
-                bar.draw("#1fff2aff");
-                return bar.getInfo();
+                const info = bar.getInfo();
+                this.selectedBar = bar; // Mémorisation directe
+        
+                //this.redrawGraph(); // redessine avec la bonne sélection
+                return info;
             }
+
         }
     }
 
@@ -164,7 +175,9 @@ export default class HeatMapController implements GraphInterface {
 
         // Redessine carrés
         for (const bar of this.heatMatrixPaths) {
-            bar.draw(getTempAnomalyColor(bar.getInfo().temp));
+            const info = bar.getInfo();
+            bar.draw(getTempAnomalyColor(info.temp)); // normal
+
         }
     }
 
@@ -305,13 +318,40 @@ export default class HeatMapController implements GraphInterface {
     drawGraph(): void {
         if (!this.canvas || !this.ctx) return;
 
-        this.initializeData();
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.initializeData(); // Calcule la matrice
 
-        this.drawAxis();
-        this.drawGraduations();
+        // 1. Créer ou redimensionner le canvas hors-écran
+        // if (!this.offscreenCanvas) {
+        //     this.offscreenCanvas = document.createElement('canvas');
+        // }
+        // this.offscreenCanvas.width = this.canvas.width;
+        // this.offscreenCanvas.height = this.canvas.height;
+
+        // const osCtx = this.offscreenCanvas.getContext('2d');
+        // if (!osCtx) return;
+
+        // 2. Dessiner sur le canvas HORS-ÉCRAN (offscreen)
+        // Note: Il faut temporairement dire à vos méthodes de dessiner sur osCtx
+        // ou bien copier le résultat final. 
+        // Pour simplifier sans casser vos objets GraphBar, on va dessiner sur le vrai canvas
+        // puis sauvegarder le résultat.
+        
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.drawAxis();        // Dessine sur this.ctx
+        this.drawGraduations(); // Dessine sur this.ctx
+        
         this.heatMatrixPaths.forEach(square => {
-            square.draw();
+            // Attention: GraphBar dessine probablement sur this.ctx par défaut
+            // Assurez-vous qu'il dessine sa couleur "normale" (non sélectionnée) ici
+            square.draw(); 
         });
+
+        // 3. COPIER le résultat final dans le canvas hors-écran pour sauvegarde
+        // osCtx.drawImage(this.canvas, 0, 0);
+
+        if (this.selectedBar) {
+                this.selectedBar.draw("black"); // Dessine juste celui-ci en noir
+                console.log("OK BAR");
+            }
     }
 }

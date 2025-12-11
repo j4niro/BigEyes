@@ -19,8 +19,8 @@ import cursor from '../../public/Cursor_Latitude_Select.png'
 import areaCursor from '../../public/area_select.png'
 
 const GROUP_COLORS = [
-  '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', 
-  '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'
+  '#9d0000ff', '#00524cff', '#005115ff', '#d26200ff', 
+  '#3c2400ff', '#9a045eff', '#440061ff', '#4900afff'
 ]
 
 export const SettingPan = () => {
@@ -137,7 +137,7 @@ export const SettingPan = () => {
 
   return (
     <div className='container-settingPan'>
-      <div className='header'>Setting Pan</div>
+      <div className='header'>Settings Pan</div>
       <hr />
 
       <div className='section'>

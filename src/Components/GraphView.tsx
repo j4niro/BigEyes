@@ -124,7 +124,7 @@ export default function GraphView({ type, offset = 40 }: Props) {
         // Mise à jour des dimensions
         const rect = div.getBoundingClientRect();
         canvas.width = rect.width;
-        canvas.height = rect.height;
+        canvas.height = 240; //rect.height;
 
         // Configuration du canvas
         controller.setCanvas(canvas);

@@ -224,7 +224,7 @@ function getColorForValue(value: number, confidence: number): string {
   } else if (clampedValue <= -0.5) {
     return `rgba(120, 200, 255, ${baseOpacity})`
   } else if (clampedValue < 0.5) {
-    return `rgba(255, 255, 255, ${baseOpacity - 0.3})`
+    return `rgba(162, 162, 162, ${baseOpacity - 0.3})`
   } else if (clampedValue < 1) {
     return `rgba(255, 245, 120, ${baseOpacity})`
   } else if (clampedValue < 1.5) {

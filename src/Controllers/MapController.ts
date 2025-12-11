@@ -21,6 +21,50 @@ export class MapController {
     this.dispatch = dispatch
   }
 
+  selectSquareAtCoordinates(
+    lat: number, 
+    lon: number, 
+    mapWidth: number, 
+    mapHeight: number, 
+    sizeInDegrees: number = 2
+  ): void {
+    // 1. Calculer les demi-côtés pour centrer le carré
+    const halfSize = sizeInDegrees / 2;
+
+    // 2. Calculer les bornes géographiques (en clampant pour rester sur la carte)
+    const latTop = Math.min(90, lat + halfSize);
+    const latBottom = Math.max(-90, lat - halfSize);
+    
+    // Note: Gérer le dépassement 180/-180 est complexe, ici on clamp simplement
+    const lonLeft = Math.max(-180, lon - halfSize);
+    const lonRight = Math.min(180, lon + halfSize);
+
+    // 3. Convertir en pixels (X, Y)
+    // Attention: L'axe Y est inversé (0 est en haut, correspondant à Lat 90)
+    const yTop = this.convertLatitudeToMapY(latTop, mapHeight);
+    const yBottom = this.convertLatitudeToMapY(latBottom, mapHeight);
+    
+    const xLeft = this.convertLongitudeToMapX(lonLeft, mapWidth);
+    const xRight = this.convertLongitudeToMapX(lonRight, mapWidth);
+
+    // 4. Créer l'objet Area
+    const area: Area = {
+      id: Date.now(), // ID unique temporaire
+      name: `Zone ${lat.toFixed(1)}, ${lon.toFixed(1)}`,
+      topLeft: { 
+        x: xLeft, 
+        y: yTop // Y min (visuellement le haut)
+      },
+      bottomRight: { 
+        x: xRight, 
+        y: yBottom // Y max (visuellement le bas)
+      }
+    };
+
+    // 5. Dispatcher l'action
+    this.dispatch(addAreaSelected(area));
+  }
+
   setSelectionMode(mode: SelectionMode): void {
     this.selectionMode = mode
     this.isDrawing = false

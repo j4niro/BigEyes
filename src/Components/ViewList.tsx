@@ -57,10 +57,10 @@ const TooltipPortal = ({
 
 // Configuration constante (ne change pas)
 const viewConfig: Record<ViewKey, { icon: string; label: string; desc: string }> = {
-  heatmap: { icon: "🔥", label: "Heatmap", desc: "Carte thermique interactive..." },
-  histogram: { icon: "📊", label: "Histogram", desc: "Histogramme analysant la fréquence..." },
-  graph: { icon: "📈", label: "Graph", desc: "Graphique standard visualisant..." },
-  regression: { icon: "📏", label: "Regression", desc: "Analyse des tendances..." }
+  heatmap: { icon: "🔥", label: "Heatmap", desc: "A heatmap showing the evolution of temperature anomalies over time for each latitude" },
+  histogram: { icon: "📊", label: "Histogram", desc: "A histogram showing the data of each longitude for the selected latitudes" },
+  graph: { icon: "📈", label: "Graph", desc: "A graph showing the mean values of the selected areas for each year." },
+  regression: { icon: "📏", label: "Regression", desc: "A graph showing anomalies regressions over years for each latitude" }
 };
 
 export default function ViewList({ 
