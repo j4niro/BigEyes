@@ -12,6 +12,7 @@ import start from '../../public/Play_button_arrowhead.png'
 import gostart from '../../public/gostart_button.png'
 import goend from '../../public/goend_button.png'
 import earthImage from '../../public/earth.png'
+import refresh from '../../public/refresh.png'
 import { setYearRange, setMapDimensions, setAreaScaledCoordinates, alertMapHeight, setMapLayout } from '../Redux/Slice/GlobalSlice'
 
 export const Map = () => {
@@ -340,6 +341,22 @@ useEffect(() => {
     }
     animationController.goToEnd()
   }
+
+  const handleRestart = () => {
+  animationController.pause()
+  setIsPlaying(false)
+  setCurrentYear(1880)
+  dispatch(setYearRange({ start: 1880, end: 1880 }))
+  
+  // Relancer l'animation automatiquement
+  setTimeout(() => {
+    setIsPlaying(true)
+    animationController.play(1880, (year, progress) => {
+      setCurrentYear(year)
+      setYearProgress(progress)
+    })
+  }, 100)
+}
 
   const handleSpeedChange = (newSpeed : 1 | 1.5 | 2) => {
     setSpeed(newSpeed)
@@ -717,6 +734,9 @@ useEffect(() => {
           </button>
           <button className='control-btn play-btn' onClick={handlePlayPause} title={isPlaying ? "Pause" : "Play"}>
             <img src={isPlaying ? pause : start} alt="" />
+          </button>
+          <button className='control-btn' onClick={handleRestart} title="Redémarrer">
+            <img src={refresh} alt="" height={21} width={21} />
           </button>
           <button className='control-btn' onClick={handleGoToEnd} title="Fin (2025)">
             <img src={goend} alt=""  />
