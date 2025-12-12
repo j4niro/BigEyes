@@ -1,4 +1,6 @@
-// controllers/SettingPanController.ts
+// controllers/SettingPanController.ts - Validation and coordinate conversion for settings panel
+// AI Assistance: ~20% (Input validation patterns and coordinate transformation formulas)
+
 import type { Dispatch } from '@reduxjs/toolkit';
 import { 
   addLatitudeSelected, 
@@ -15,43 +17,55 @@ export class SettingPanController {
   }
 
   /**
-   * Valide et met à jour l'année dans Redux
+   * Validate and update year in Redux store
+   * Clamps input to valid range [1880, 2025]
+   * @param yearInput - Raw string input from user
+   * @returns Validation result with corrected year value
    */
   validateAndSetYear(yearInput: string): { isValid: boolean; correctedYear: number } {
     const year = parseInt(yearInput)
     
+    // Handle invalid input or year before data range
     if (isNaN(year) || year < 1880) {
       this.dispatch(setYearRange({ start: 1880, end: 1880 }))
       return { isValid: false, correctedYear: 1880 }
-    } else if (year > 2025) {
+    } 
+    // Handle year after data range
+    else if (year > 2025) {
       this.dispatch(setYearRange({ start: 2025, end: 2025 }))
       return { isValid: false, correctedYear: 2025 }
-    } else {
+    } 
+    // Valid year within range
+    else {
       this.dispatch(setYearRange({ start: year, end: year }))
       return { isValid: true, correctedYear: year }
     }
   }
 
   /**
-   * Ajoute une latitude manuellement via l'input + bouton
-   * Cette latitude sera affichée comme ligne sur la carte
+   * Add latitude from manual text input
+   * Validates input and checks alignment with 4° data grid
+   * @param latitudeInput - Raw string input from user
+   * @returns Success status and optional error message
    */
   addLatitudeFromInput(latitudeInput: string): { success: boolean; message?: string } {
     const lat = parseFloat(latitudeInput)
     
     if (isNaN(lat)) {
-      return { success: false, message: "Valeur invalide" }
+      return { success: false, message: "Invalid value" }
     }
     
+    // Check latitude bounds (poles excluded due to data limitations)
     if (lat < -88 || lat > 88 ) {
-      return { success: false, message: "Latitude entre -88° et 88°" }
+      return { success: false, message: "Latitude must be between -88° and 88°" }
     }
-    else if(lat%4!==0){
-      return { success: false, message: "Latitude inexistante" }
+    // Enforce 4° grid alignment (data availability constraint)
+    else if(lat % 4 !== 0){
+      return { success: false, message: "Latitude does not exist in dataset" }
     }
 
     const latitude: Latitude = {
-      id: 0, // sera mis à jour par le reducer
+      id: 0, // Will be assigned by Redux reducer
       lat: lat
     }
     
@@ -60,18 +74,19 @@ export class SettingPanController {
   }
 
   /**
-   * Ajoute une latitude depuis un clic sur la carte (mode "Latitude select")
-   * Arrondit à la grille 4x4
+   * Add latitude from map click in "Latitude select" mode
+   * Automatically snaps to nearest 4° grid point
+   * @param lat - Raw latitude value from click coordinates
    */
   addLatitudeFromMapClick(lat: number): void {
-    // Arrondir à la grille 4x4 (car les données sont en grille 4°x4°)
+    // Snap to 4° grid (data is available at 4° resolution)
     const roundedLat = Math.round(lat / 4) * 4
     
-    // Limiter entre -88 et 88
+    // Clamp to valid range [-88, 88]
     const clampedLat = Math.max(-88, Math.min(88, roundedLat))
 
     const latitude: Latitude = {
-      id: 0,
+      id: 0, // Will be assigned by Redux reducer
       lat: clampedLat
     }
     
@@ -79,36 +94,47 @@ export class SettingPanController {
   }
 
   /**
-   * Supprime une latitude sélectionnée
+   * Remove selected latitude line from map
+   * @param latitudeId - Unique identifier of latitude to remove
    */
   removeLatitude(latitudeId: number): void {
     this.dispatch(deleteLatitudeSelected(latitudeId))
   }
 
   /**
-   * Vérifie si une latitude est déjà sélectionnée
+   * Check if latitude is already selected to prevent duplicates
+   * @param lat - Latitude value to check
+   * @param selectedLatitudes - Current list of selected latitudes
+   * @returns True if latitude already exists in selection
    */
   isLatitudeAlreadySelected(lat: number, selectedLatitudes: Latitude[]): boolean {
     return selectedLatitudes.some(latitude => latitude.lat === lat)
   }
 
   /**
-   * Convertit une coordonnée Y de la carte en latitude
-   * Utilisé lors d'un clic sur la carte
+   * Convert pixel Y coordinate to geographic latitude
+   * Uses simple equirectangular projection
+   * @param y - Pixel Y coordinate on map
+   * @param mapHeight - Total map height in pixels
+   * @returns Latitude in degrees, rounded to 4° grid
    */
   convertMapYToLatitude(y: number, mapHeight: number): number {
-    // Projection équirectangulaire simple
-    // y = 0 → lat = 90°
-    // y = mapHeight → lat = -90°
+    // Equirectangular projection:
+    // y = 0 → lat = 90° (North Pole)
+    // y = mapHeight → lat = -90° (South Pole)
     const lat = 90 - (y / mapHeight) * 180
     
-    // Arrondir à la grille 4x4
+    // Snap to 4° grid for data alignment
     return Math.round(lat / 4) * 4
   }
 
   /**
-   * Convertit une latitude en coordonnée Y sur la carte
-   * Utilisé pour dessiner les lignes de latitude
+   * Convert geographic latitude to pixel Y coordinate
+   * Inverse of convertMapYToLatitude
+   * Used for drawing latitude lines on map
+   * @param lat - Latitude in degrees
+   * @param mapHeight - Total map height in pixels
+   * @returns Pixel Y coordinate on map
    */
   convertLatitudeToMapY(lat: number, mapHeight: number): number {
     // lat = 90° → y = 0
@@ -117,7 +143,11 @@ export class SettingPanController {
   }
 
   /**
-   * Calcule le nombre total de sélections (latitudes + zones)
+   * Calculate total number of selections for display badge
+   * Combines latitudes and areas into single count
+   * @param latitudesCount - Number of selected latitude lines
+   * @param areasCount - Number of selected rectangular areas
+   * @returns Total selection count
    */
   getTotalSelections(latitudesCount: number, areasCount: number): number {
     return latitudesCount + areasCount

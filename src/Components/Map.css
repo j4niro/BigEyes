@@ -1,3 +1,7 @@
+/* components/Map.css - Styling for interactive temperature anomaly map visualization */
+/* AI Assistance: ~10% (CSS Grid patterns and animation keyframes suggestions) */
+
+/* Main container with flexible height */
 .map-container {
   position: relative;
   width: 100%;
@@ -10,7 +14,7 @@
   z-index: 1000;
 }
 
-/* Carte du monde */
+/* Interactive map viewport */
 .map-wrapper {
   position: relative;
   width: 100%;
@@ -19,6 +23,7 @@
   overflow: hidden;
 }
 
+/* Base earth map image */
 .earth-image {
   width: 100%;
   height: 100%;
@@ -26,14 +31,14 @@
   display: block;
 }
 
-/* Grille de latitude */
+/* Geographic reference grid - Latitude lines */
 .latitude-grid {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  pointer-events: none;
+  pointer-events: none; /* Allow interaction with underlying map */
   z-index: 5;
 }
 
@@ -57,7 +62,7 @@
   border-radius: 3px;
 }
 
-/* Grille de longitude */
+/* Geographic reference grid - Longitude lines */
 .longitude-grid {
   position: absolute;
   top: 0;
@@ -88,7 +93,7 @@
   border-radius: 3px;
 }
 
-/* Barre de contrôle d'animation */
+/* Animation control bar at bottom of map */
 .animation-controls {
   position: absolute;
   bottom: 0;
@@ -105,6 +110,7 @@
   z-index: 10;
 }
 
+/* Individual control sections (speed, playback, zoom) */
 .control-section {
   background-color: #d9d9d9;
   border-radius: 4px;
@@ -115,17 +121,17 @@
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
 }
 
-
+/* Speed selector and zoom toggle buttons */
 .speed-section,
 .zoom-section {
   min-width: 100px;
   height: 34px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Contrôles de lecture */
+/* Playback control buttons container */
 .playback-controls {
   display: flex;
   gap: 8px;
@@ -137,6 +143,7 @@
   align-items: center;
 }
 
+/* Individual control buttons (play, pause, skip) */
 .control-btn {
   background-color: transparent;
   border: none;
@@ -148,9 +155,14 @@
   border-radius: 4px;
 }
 
+.control-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Year navigation slider bar */
 .year-navigation {
   position: absolute;
-  bottom: 51px;
+  bottom: 51px; /* Above animation controls */
   left: 0;
   right: 0;
   height: 15px;
@@ -163,7 +175,7 @@
   z-index: 9;
 }
 
-/* Container du slider */
+/* Slider container with relative positioning for child elements */
 .year-slider-container {
   flex: 1;
   position: relative;
@@ -171,7 +183,7 @@
   padding: 0 10px;
 }
 
-/* Label année au-dessus du curseur */
+/* Floating year label above slider thumb */
 .year-label {
   position: absolute;
   top: -25px;
@@ -185,12 +197,12 @@
   font-weight: 600;
   color: #333;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  pointer-events: none;
+  pointer-events: none; /* Prevent interference with slider interaction */
   z-index: 3;
-  transition: left 0.05s ease-out;
+  transition: left 0.05s ease-out; /* Smooth label movement */
 }
 
-/* Graduations verticales */
+/* Vertical graduation marks on slider track */
 .year-graduations {
   position: absolute;
   left: 10px;
@@ -203,25 +215,27 @@
   z-index: 1;
 }
 
+/* Individual year graduation mark */
 .graduation {
   width: 1px;
   height: 100%;
   background: linear-gradient(to bottom, transparent 0%, transparent 30%, #999 30%, #999 70%, transparent 70%, transparent 100%);
 }
 
+/* Emphasized marks for decade boundaries */
 .graduation.major {
   width: 2px;
   background: linear-gradient(to bottom, transparent 0%, transparent 20%, #666 20%, #666 80%, transparent 80%, transparent 100%);
 }
 
-/* Slider */
+/* Range slider input element */
 .year-slider {
   position: absolute;
   width: calc(100% - 10px);
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  height: 34px;
+  height: 34px; /* Larger hit area for better UX */
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
@@ -232,14 +246,15 @@
   padding: 0;
 }
 
-/* Track invisible */
+/* Slider track styling - WebKit browsers */
 .year-slider::-webkit-slider-runnable-track {
   width: 100%;
   height: 2px;
-  background: transparent;
+  background: transparent; /* Track is visual only via graduations */
   border: none;
 }
 
+/* Slider track styling - Firefox */
 .year-slider::-moz-range-track {
   width: 100%;
   height: 2px;
@@ -247,7 +262,7 @@
   border: none;
 }
 
-/* Curseur Chrome/Safari */
+/* Slider thumb - Chrome/Safari - Triangle pointer shape */
 .year-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -255,21 +270,21 @@
   height: 0;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-top: 12px solid #4a90e2;
+  border-top: 12px solid #4a90e2; /* Blue triangle pointing down */
   cursor: pointer;
   margin-top: -5px;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
 }
 
 .year-slider::-webkit-slider-thumb:hover {
-  border-top-color: #357abd;
+  border-top-color: #357abd; /* Darker on hover */
 }
 
 .year-slider::-webkit-slider-thumb:active {
-  border-top-color: #2a5f8f;
+  border-top-color: #2a5f8f; /* Even darker when dragging */
 }
 
-/* Curseur Firefox */
+/* Slider thumb - Firefox */
 .year-slider::-moz-range-thumb {
   width: 0;
   height: 0;
@@ -290,13 +305,7 @@
   border-top-color: #2a5f8f;
 }
 
-
-.control-btn:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-
-/* Indicateur d'année */
+/* Year display indicator (alternative position) */
 .year-indicator {
   position: absolute;
   bottom: 70px;
@@ -311,7 +320,7 @@
   z-index: 10;
 }
 
-/* Responsive */
+/* Responsive adjustments for mobile devices */
 @media (max-width: 768px) {
   .animation-controls {
     flex-direction: column;
@@ -324,7 +333,7 @@
   }
 }
 
-/* Modal de nommage d'aire */
+/* Modal overlay for area naming (legacy - may be unused) */
 .area-modal-overlay {
   position: fixed;
   top: 0;
@@ -347,11 +356,12 @@
   font-family: 'montserrat', sans-serif;
 }
 
+/* Draggable resize handle for map height adjustment */
 .map-resize-handle {
   width: 100%;
   height: 10px;
   background-color: #899785;
-  cursor: ns-resize;
+  cursor: ns-resize; /* North-south resize cursor */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -364,21 +374,23 @@
 }
 
 .map-resize-handle:hover {
-  background-color: #7a8675;
+  background-color: #7a8675; /* Darker on hover for affordance */
 }
 
 .map-resize-handle:active {
-  background-color: #6b7566;
+  background-color: #6b7566; /* Even darker when dragging */
 }
 
+/* Visual indicator bar on resize handle */
 .resize-bar {
   width: 60px;
   height: 3px;
   background-color: white;
   border-radius: 2px;
-  pointer-events: none;
+  pointer-events: none; /* Prevent interference with drag interaction */
 }
 
+/* Text label on resize handle */
 .resize-label {
   font-size: 9px;
   color: white;
@@ -388,14 +400,16 @@
   pointer-events: none;
 }
 
+/* Area information tooltip with fade-in animation */
 .area-tooltip {
   animation: tooltipFadeIn 0.2s ease;
 }
 
+/* Smooth tooltip appearance on hover */
 @keyframes tooltipFadeIn {
   from {
     opacity: 0;
-    transform: translateX(-10px);
+    transform: translateX(-10px); /* Slide in from left */
   }
   to {
     opacity: 1;

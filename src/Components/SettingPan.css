@@ -1,4 +1,7 @@
-/* SettingPan.css */
+/* components/SettingPan.css - Styling for collapsible settings panel with hierarchical dropdown */
+/* AI Assistance: ~5% (Scrollbar styling suggestions and flexbox patterns) */
+
+/* Main panel container - fixed width, vertical layout */
 .container-settingPan {
     width: 150px;
     background-color: #899785;
@@ -12,6 +15,7 @@
     flex-direction: column;
 }
 
+/* Panel header with title */
 .header {
     background-color: #899785;
     color: white;
@@ -21,6 +25,7 @@
     border-radius: 4px 4px 0 0;
 }
 
+/* Individual input sections (year, latitude) */
 .section {
     padding: 12px;
     background-color: #899785;
@@ -34,6 +39,7 @@
     font-weight: 500;
 }
 
+/* Year input field with custom styling */
 .year-input {
     width: 100%;
     padding: 6px 8px;
@@ -53,6 +59,7 @@
     border-color: #5a6b56;
 }
 
+/* Latitude input with add button layout */
 .input-with-button {
     display: flex;
     gap: 6px;
@@ -76,6 +83,7 @@
     border-color: #5a6b56;
 }
 
+/* Plus button for adding latitudes */
 .add-button {
     width: 32px;
     height: 32px;
@@ -101,6 +109,7 @@
     background-color: #3a4b36;
 }
 
+/* Mode selection buttons section */
 .mode-buttons-section {
     display: flex;
     flex-direction: column;
@@ -108,6 +117,7 @@
     gap: 15px;
 }
 
+/* Individual mode toggle buttons (latitude/area select) */
 .mode-button {
     width: 90%;
     padding: 8px 8px;
@@ -130,23 +140,26 @@
     background-color: #f5f5f5;
 }
 
+/* Active mode highlighting */
 .mode-button.active {
     background-color: #e8ebe7;
 }
 
+/* Icon container within mode buttons */
 .cursor-icon {
     font-size: 14px;
     display: flex;
     align-items: center;
 }
 
-/* Dropdown des sélections */
+/* Selections dropdown container with upward expansion */
 .selections-dropdown-container {
     position: relative;
     width: 90%;
     margin-bottom: 10px;
 }
 
+/* Dropdown trigger button showing selection count */
 .selections-counter {
     width: 100%;
     background-color: white;
@@ -168,6 +181,7 @@
     background-color: #f5f5f5;
 }
 
+/* Chevron icon indicating dropdown state */
 .counter-icon {
     font-size: 10px;
     color: black;
@@ -183,6 +197,7 @@
     font-weight: 500;
 }
 
+/* Badge showing total selection count */
 .counter-badge {
     background-color: black;
     color: white;
@@ -196,23 +211,23 @@
     font-weight: 600;
 }
 
-/* Dropdown content avec scroll  */
+/* Dropdown content panel - opens upward with scrolling */
 .selections-dropdown {
     position: absolute;
-    bottom: calc(100% + 5px);
+    bottom: calc(100% + 5px); /* Opens above trigger button */
     left: 0;
-    width: 300px; 
+    width: 300px; /* Wider than panel for better content visibility */
     background-color: white;
     border: 1px solid #ccc;
     border-radius: 4px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     z-index: 100;
     max-height: 200px; 
-    overflow-y: scroll; /* Force le scroll visible */
+    overflow-y: scroll; /* Always show scrollbar for consistency */
     overflow-x: hidden;
 }
 
-/* Style de la scrollbar pour webkit (Chrome, Safari, Edge) */
+/* Custom scrollbar styling - WebKit browsers (Chrome, Safari, Edge) */
 .selections-dropdown::-webkit-scrollbar {
     width: 8px;
 }
@@ -231,7 +246,7 @@
     background: #555;
 }
 
-/* Bouton créer groupe dans dropdown */
+/* Create group button within dropdown */
 .create-group-btn-dropdown {
     width: calc(100% - 16px);
     margin: 8px;
@@ -250,7 +265,7 @@
     background-color: #2980b9;
 }
 
-/* Formulaire création groupe */
+/* Group creation form - inline within dropdown */
 .create-group-form-dropdown {
     padding: 8px;
     background-color: #f8f9fa;
@@ -268,6 +283,7 @@
     font-family: "montserrat";
 }
 
+/* Color picker with preset palette */
 .color-picker-dropdown {
     display: flex;
     gap: 6px;
@@ -288,11 +304,13 @@
     transform: scale(1.1);
 }
 
+/* Selected color indication */
 .color-dot-dropdown.selected {
     border-color: #2c3e50;
     transform: scale(1.15);
 }
 
+/* Form action buttons (OK/Cancel) */
 .form-actions-dropdown {
     display: flex;
     gap: 6px;
@@ -327,14 +345,17 @@
     background-color: #7f8c8d;
 }
 
+/* Dropdown sections (Latitudes, Groups, Ungrouped Areas) */
 .dropdown-section {
     padding: 8px 0;
 }
 
+/* Visual separator between sections */
 .dropdown-section + .dropdown-section {
     border-top: 1px solid #e0e0e0;
 }
 
+/* Section header labels */
 .dropdown-header {
     padding: 6px 12px;
     font-size: 11px;
@@ -343,6 +364,7 @@
     text-transform: uppercase;
 }
 
+/* Individual selection item (latitude or ungrouped area) */
 .selection-item {
     display: flex;
     justify-content: space-between;
@@ -362,6 +384,7 @@
     font-weight: 500;
 }
 
+/* Remove button (red X) for deletions */
 .remove-btn {
     background-color: #e74c3c;
     color: white;
@@ -384,15 +407,16 @@
     background-color: #c0392b;
 }
 
-/* Groupes dans dropdown */
+/* Group container within dropdown */
 .group-item {
     margin-bottom: 4px;
 }
 
+/* Group header with colored left border indicator */
 .group-header-dropdown {
     padding: 6px 10px;
     background-color: #f1f3f5;
-    border-left: 3px solid;
+    border-left: 3px solid; /* Color set dynamically via style attribute */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -409,11 +433,12 @@
     white-space: nowrap;
 }
 
+/* Area member within group - indented display */
 .area-in-group {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 4px 10px 4px 20px;
+    padding: 4px 10px 4px 20px; /* Left padding creates indentation */
     font-size: 10px;
     background-color: #f8f9fa;
     gap: 4px;
@@ -424,6 +449,7 @@
     color: #2d2d2d;
 }
 
+/* Editable area name with hover affordance */
 .area-label-editable {
     flex: 1;
     color: #2d2d2d;
@@ -440,6 +466,7 @@
     background-color: #e9ecef;
 }
 
+/* Inline edit input for area names */
 .area-name-edit-input {
     flex: 1;
     padding: 2px 4px;
@@ -449,6 +476,7 @@
     font-family: "montserrat";
 }
 
+/* Ungroup button (arrow icon) - removes area from group */
 .ungroup-btn-small {
     background-color: #f39c12;
     color: white;
@@ -464,6 +492,7 @@
     background-color: #e67e22;
 }
 
+/* Smaller remove button for grouped areas */
 .remove-btn-small {
     background-color: #e74c3c;
     color: white;
@@ -484,7 +513,7 @@
     background-color: #c0392b;
 }
 
-/* Aires non groupées */
+/* Ungrouped area item with group assignment dropdown */
 .selection-item-area {
     display: flex;
     justify-content: space-between;
@@ -499,6 +528,7 @@
     background-color: #f5f5f5;
 }
 
+/* Dropdown for assigning area to group */
 .group-select-small {
     padding: 2px 4px;
     border: 1px solid #bdc3c7;
@@ -510,6 +540,7 @@
     flex-shrink: 0;
 }
 
+/* Error message display for invalid inputs */
 .error-message {
     margin-top: 6px;
     padding: 6px;
@@ -519,6 +550,7 @@
     font-size: 11px;
 }
 
+/* Remove spinner controls from number inputs for cleaner appearance */
 input[type="number"] {
     -moz-appearance: textfield;
 }
