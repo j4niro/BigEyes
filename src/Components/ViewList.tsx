@@ -1,3 +1,26 @@
+/* 
+  Component for managing graph ensemble layout
+
+  INFO : YOU CAN USE DRAG AND DROP TO ADJUST GRAPHS ENSEMBLE LAYOUT
+
+  AI Assistance : ~80% (Apart from business workflow design : Tooltip, Drag and Drop, Layout boutons)
+
+  GEMINI PROMPTS : "
+    - je veux implémenter du drag and drop sur l'ensemble des boutons de sorte à permettre à l'utilisateur de mettre les boutons dans l'ordre qu'il souhaite. Aussi, je veux que l'ordre soit mémoriser dans un état...
+
+    - Excellent, ça fonctionne.
+Maintenant, je veux que les graphs de mon appli soient rangé dans l'ordre des boutons...
+
+    - Excellent, maintenant, sépare les logiques de ce composant (qui n'a pas la même structure que les autres). Un fichier pour le composant à proprement parlé et un fichier pour le controleur. 
+Inspire toi tout de même de ma manière de disposer les propriétés et... 
+
+    - Excellent, je veux maintenant que viewlist soit scrollable verticalement et que les deux boutons pour changer la disposition soit toujours visibles au dessus des autres boutons malgré le scroll.
+
+    - Excellent !
+J'ai fait quelques petites modifs à mon ViewList. Maintenant je veux qu'au survol des boutons identifiant un graph, un texte dans apparait pour décrire le graphe...
+
+  "
+*/
 import React, { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom"; // Import nécessaire
 import { useViewListController } from "../Controllers/ViewListController";

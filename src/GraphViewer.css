@@ -1,3 +1,7 @@
+/* 
+  AI Assistance : ~80% (Basic Layout based on our figma prototype and component structure)
+*/
+
 /* Container principal - Fixé en bas de page généralement */
 .graph-viewer {
   display: flex;

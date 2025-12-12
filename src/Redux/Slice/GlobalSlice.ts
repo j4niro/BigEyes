@@ -1,6 +1,10 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+/*
+    Global Slice, used to store all data related to user interface apart from data directly related to the JSON provided by the teacher
+*/
 
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { TempAnomalyArea } from "./DataSlice";
+
 
 export type Latitude = {
     id: number,
@@ -37,32 +41,12 @@ export type SelectionMode = 'latitude' | 'area' | null
 
 export type ViewKey = "heatmap" | "histogram" | "graph" | "regression";
 
-export type viewDisposition = {
-  position: "top-left-graph" | "bottom-left-graph";
-  id: number;
-};
-
-export const TWORAWS: viewDisposition[] = [
-  { position: "top-left-graph",    id: 0 },
-  { position: "top-left-graph",    id: 1 },
-  { position: "bottom-left-graph", id: 2 },
-  { position: "bottom-left-graph", id: 3 },
-];
-
-export type ONERAWS = {
-  disposition: viewDisposition[];
-};
-
-export type viewsDisposition = {
-  disposition: viewDisposition[];
-};
-
 export type screenLayoutState = {
     mapLayout : 1 | 0.6 | 0.2 ;
     viewerLayout : 0 | 0.4 | 0.8 ;
 }
 
-export type YearRange = { // if start === end then only one year is selected
+export type YearRange = {
     start:number,
     end:number,
 }
@@ -77,7 +61,6 @@ export type GlobalState = {
     mapHeightIndicator: number|null,
 
     yearRange : YearRange,
-    // currentYear : number,
 
     selectedAreasResolved : Array<TempAnomalyArea>,
     selectedAreas : Array<Area>,
@@ -87,8 +70,6 @@ export type GlobalState = {
 
     currentArea:TempAnomalyArea|null,
 
-    currentLat:number,
-    // selectedLatitudes : Array<number>,
     selectedLatitudes : Array<Latitude>,
     selectedLatitudesVersion : number,
     currentLong:number,
@@ -96,8 +77,6 @@ export type GlobalState = {
     viewOrder: ViewKey[],
 
     mapDimensions:{width:number, height:number},
-
-    showGraphViewer:boolean,
 
     areaCached:{lat:number, lon:number}|null,
 
@@ -109,14 +88,12 @@ export type GlobalState = {
 const initialState: GlobalState = {
     
     yearRange : {start:1880, end:2025}, 
-    // currentYear: 2020,
 
     selectedAreas : [],
     selectedAreasResolved : [],
     currentArea: null,
 
     selectedLatitudes : [],
-    currentLat: 0,
     currentLong: 0,
     selectedLatitudesVersion : 0,
 
@@ -133,7 +110,6 @@ const initialState: GlobalState = {
 
     viewOrder: ["heatmap", "histogram", "graph", "regression"],
 
-    showGraphViewer:true,
 
     areaCached:null,
 
@@ -146,13 +122,12 @@ const initialState: GlobalState = {
 const globalSlice = createSlice({
     name : 'global',
     initialState : initialState,
-    reducers: { //TODO: manage the reducers according to the data structure we decide to use 
+    reducers: {
         addLatitudeSelected : (state, action:PayloadAction<Latitude>)=>{
             state.selectedLatitudes.push({...action.payload});
             state.currentLatId = state.selectedLatitudes.length-1;
             state.selectedLatitudes[state.currentLatId].id = state.currentLatId;
         },
-
 
         deleteLatitudeSelected : (state, action:PayloadAction<number>)=>{
             const id = action.payload;
@@ -171,10 +146,6 @@ const globalSlice = createSlice({
             state.selectedAreas.push({...action.payload});
             state.currentAreaId = state.selectedAreas.length-1;
             state.selectedAreas[state.currentAreaId].id = state.currentAreaId;
-        },
-
-        setCurrentLat : (state, action:PayloadAction<number>)=>{
-            state.currentLat = action.payload;
         },
 
         setAreaToCache : (state, action:PayloadAction<{lat:number, lon:number}>)=>{
@@ -198,8 +169,6 @@ const globalSlice = createSlice({
                 element.id = index;
             }
         },
-
-
         
         updateAreaName: (state, action: PayloadAction<{id: number, name: string}>) => {
             const area = state.selectedAreas[action.payload.id];
@@ -263,7 +232,6 @@ const globalSlice = createSlice({
             state.areaGroups = state.areaGroups.filter(g => g.id !== groupId);
         },
 
-
         setCurrentLong : (state, action:PayloadAction<number>)=>{
             state.currentLong = action.payload;
         },
@@ -275,20 +243,8 @@ const globalSlice = createSlice({
             }
         },
 
-        // setCurrentYear : (state, action:PayloadAction<number>)=>{
-        //     state.currentYear = action.payload;
-        // },
-
-        alertMapHeight: (state, action: PayloadAction<number>) => {
-            state.mapHeightIndicator = action.payload;
-        },
-
         reorderViews: (state, action: PayloadAction<ViewKey[]>) => {
             state.viewOrder = action.payload;
-        },
-
-        showGraphViewer : (state, action: PayloadAction<string>) =>{
-            state.showGraphViewer = action.payload === "show" ? true : false;
         },
 
         setMapLayout : (state, action: PayloadAction<1 | 0.6 | 0.2>) =>{
@@ -324,11 +280,6 @@ const globalSlice = createSlice({
                     break;
             }
         },
-
-        switchViewerLayout : (state, action: PayloadAction<string>) =>{
-            state.viewerIsInGrid = action.payload === "grid" ? true : false;
-        },
-
 
         setAreaScaledCoordinates : (state, action:PayloadAction<Area>)=>{
             const areaToUpdate = state.selectedAreas.find((area)=>area.id === action.payload.id);
@@ -376,15 +327,10 @@ export const {
     removeAreaFromGroup,
     deleteGroup,
     updateGroupName,
-    alertMapHeight,
-    setCurrentLat,
     setCurrentLong,
     setMapDimensions,
     setAreaScaledCoordinates,
-    showGraphViewer,
     setAreaToCache,
-    switchViewerLayout,
-
     setMapLayout,
     setViewerLayout,
 } = globalSlice.actions

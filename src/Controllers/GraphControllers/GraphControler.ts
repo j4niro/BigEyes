@@ -1,6 +1,10 @@
+/* 
+  Controller of Graph View (mean anomalies values over years)
+
+  AI Assistance : ~30% (Optimization and common debugging task)
+*/
 import type { TempAnomalyArea, TempAnomalyData, YearValue } from "../../Redux/Slice/DataSlice";
 import { setYearRange } from "../../Redux/Slice/GlobalSlice";
-import type { GraphInterface } from "./GraphInterface";
 
 
 export interface graphControllerProperties {
@@ -11,21 +15,20 @@ export interface graphControllerProperties {
     dispatcher:(func:any)=>any;
 }
 
-export default class GraphController implements GraphInterface {
+export default class GraphController {
     private canvas: HTMLCanvasElement | null = null;
     private ctx: CanvasRenderingContext2D | null = null;
 
-    private offset: number;
-    private offsetX:number;
-    private offsetY:number;
+    private offset: number; //offset provided via Props. It is the gap between graph canvas container and canvas itself
+    private offsetX:number; //offset on X-axis, calculated from 'offset'
+    private offsetY:number; //offset on Y-axis
 
     private width:number = 0;
     private height:number = 0;
 
-    private ar: {tempA:TempAnomalyArea, groupId:number, color:string}[][] = [];   // <--- plusieurs groupes
+    private ar: {tempA:TempAnomalyArea, groupId:number, color:string}[][] = []; 
     private areasProvided:{tempA:TempAnomalyArea, groupId:number, color:string}[];
 
-    // private an: number;
     private yearRef: number;
 
     private colors:string[] = [];
@@ -52,27 +55,22 @@ export default class GraphController implements GraphInterface {
 
     constructor(props:graphControllerProperties) {
         
-        //console.log("LEN", this.ar.length);
-        // this.an = an;
         this.yearRef = props.currentYear;
-        this.offset = props.graphZoneOffset;
 
+        this.offset = props.graphZoneOffset;
         this.offsetX=this.offset*1.5;
         this.offsetY=this.offset;
 
-        this.dispatch = props.dispatcher;
-
         this.areasProvided = props.areasIdentifiedByGroupID;
 
-        // console.log("AREAS", this.ar);
+        this.dispatch = props.dispatcher;
     }
 
-    computeAreaToRender(): void{
+    computeAreaToRender(): void{ // sort and gether all areas retrieved from Props 
         if (this.areasProvided.length === 0) return;
 
         const groups: Map<number, {tempA:TempAnomalyArea, groupId:number, color:string}[]> = new Map();
 
-        // Grouper par groupId
         for (const area of this.areasProvided) {
             if (!groups.has(area.groupId)) {
                 groups.set(area.groupId, []);
@@ -80,14 +78,11 @@ export default class GraphController implements GraphInterface {
             groups.get(area.groupId)!.push(area);
         }
 
-        // Transformer Map en tableau de tableaux
         const groupedData = Array.from(groups.values());
 
-        // Mettre à jour la variable interne this.ar utilisée par drawLegend & co
         this.ar = groupedData;
 
     }
-
 
     drawLegend():void{
         if (!this.canvas || !this.ctx) return ;
@@ -108,7 +103,7 @@ export default class GraphController implements GraphInterface {
         
     }
 
-    setYear(year:number) {
+    setYear(year:number) { // store selected year from graph to Redux store
           this.dispatch(setYearRange({start:year, end:2025}));
     }
 
@@ -121,7 +116,7 @@ export default class GraphController implements GraphInterface {
         
     };
 
-    setCanvas(canvas: HTMLCanvasElement | null) {
+    setCanvas(canvas: HTMLCanvasElement | null) { // initialize graph canvas size properties and event callback
         this.canvas = canvas;
         this.ctx = canvas?.getContext("2d") || null;
 
@@ -133,7 +128,7 @@ export default class GraphController implements GraphInterface {
         this.canvas.addEventListener("mousemove", this.handleMouseMove);
     }
 
-    updateData(areaP:{tempA:TempAnomalyArea, groupId:number, color:string}[], an: number) {
+    updateData(areaP:{tempA:TempAnomalyArea, groupId:number, color:string}[], an: number) { // in case any data from Props change
 
         this.areasProvided = areaP;
         this.yearRef = an;
@@ -143,7 +138,7 @@ export default class GraphController implements GraphInterface {
 
     }
 
-    private drawYearLine(year: number): void {
+    private drawYearLine(year: number): void { // draw red line on graph for year indication
         if (!this.canvas || !this.ctx) return;
 
         const scaleX = this.width / 146;
@@ -159,7 +154,7 @@ export default class GraphController implements GraphInterface {
         this.ctx.stroke();
     }
 
-    private drawTooltip(p: { x: number; y: number; value: number; year: number; color: string }) {
+    private drawTooltip(p: { x: number; y: number; value: number; year: number; color: string }) { // floating box displaying dot details on graph
         if (!this.ctx) return;
 
         this.ctx.save();
@@ -173,15 +168,12 @@ export default class GraphController implements GraphInterface {
         const x = p.x + 10 + w > this.width ? p.x - w : p.x + 10  ;
         const y = p.y - 10;
 
-        // Fond blanc
         this.ctx.fillStyle = "white";
         this.ctx.fillRect(x, y - h, w, h);
 
-        // Bordure
         this.ctx.strokeStyle = p.color;
         this.ctx.strokeRect(x, y - h, w, h);
 
-        // Texte
         this.ctx.fillStyle = "black";
         this.ctx.fillText(text, x + padding, y - 4);
         this.ctx.restore();
@@ -199,20 +191,18 @@ export default class GraphController implements GraphInterface {
         for (const p of this.points) {
             const dx = mouseX - p.x;
             const dy = mouseY - p.y;
-            if (Math.sqrt(dx*dx + dy*dy) < 3) { // marge de 3px
+            if (Math.sqrt(dx*dx + dy*dy) < 3) {
                 hoveredPoint = p;
                 break;
             }
         }
 
-        this.redrawGraph();
+        this.drawGraph();
 
         if (hoveredPoint) {
             this.drawTooltip(hoveredPoint);
         }
     };
-
-
 
     onMouseDown(event: React.MouseEvent): number|undefined {
         if (!this.canvas) return;
@@ -228,7 +218,7 @@ export default class GraphController implements GraphInterface {
         const year = 1880 + xGraph / scaleX;
         this.yearRef = year;
 
-        this.redrawGraph();
+        this.drawGraph();
         this.drawYearLine(year);
 
         return year
@@ -237,28 +227,27 @@ export default class GraphController implements GraphInterface {
     drawAxis(): void {
         if (!this.canvas || !this.ctx) return;
 
-        // this.drawTitle();
         this.drawLegend();
 
         this.ctx.strokeStyle = "#000";
         this.ctx.lineWidth = 2;
         this.ctx.fillStyle = "#000000";
 
-        // Axes
+        // Axis lines
         this.ctx.beginPath();
         this.ctx.moveTo(this.offsetX, this.offsetY);
         this.ctx.lineTo(this.offsetX, this.offsetY + this.height);
         this.ctx.lineTo(this.offsetX + this.width, this.offsetY + this.height);
         this.ctx.stroke();
 
-        // Nom Y
+        // Name Y-Axis
         this.ctx.save();
         this.ctx.translate(this.offsetX / 3, this.width / 2);
         this.ctx.rotate(-Math.PI / 2);
         this.ctx.fillText("Mean Anomalies", this.offsetX / 2, 0);
         this.ctx.restore();
 
-        // Flèche Y
+        // Arrow Y-Axis
         this.ctx.beginPath();
         this.ctx.moveTo(this.offsetX, this.offsetY);
         this.ctx.lineTo(this.offsetX, this.offsetY - 10);
@@ -270,13 +259,13 @@ export default class GraphController implements GraphInterface {
         this.ctx.lineTo(this.offsetX, this.offsetY - 10);
         this.ctx.fill();
 
-        // Nom X
+        // Name X-Axis
         this.ctx.save();
         this.ctx.translate(this.width / 2 + this.offsetX / 3, this.height + (this.offset * 5) / 3);
         this.ctx.fillText("year", this.offsetX / 2, 5);
         this.ctx.restore();
 
-        // Flèche X
+        // Arrow X-Axis
         this.ctx.beginPath();
         this.ctx.moveTo(this.offsetX + this.width, this.offsetY + this.height);
         this.ctx.lineTo(this.offsetX + this.width + 10, this.offsetY + this.height);
@@ -294,7 +283,7 @@ export default class GraphController implements GraphInterface {
         const minTemp = this.extremValues.min;
         const maxTemp = this.extremValues.max;
 
-        // Graduation Y
+        // Graduation Y-Axis
         let temp = minTemp;
         this.ctx.lineWidth = 1;
         for (let index = 0; temp < maxTemp; index += 15) {
@@ -312,7 +301,7 @@ export default class GraphController implements GraphInterface {
             }
         }
 
-        // Graduation X
+        // Graduation X-Axis
         let year = 1880;
         this.ctx.lineWidth = 1;
         for (let index = 0; index < this.width && year + index <= 2025; index += 1) {
@@ -330,9 +319,6 @@ export default class GraphController implements GraphInterface {
         return { scaleX: this.width / 146, scaleY: (maxTemp - minTemp) / this.height };
     }
 
-    //----------------------------------------------
-    // EXTREM VALUES FOR ALL GROUPS
-    //----------------------------------------------
     private calculateExtremValues(): { min: number; max: number } {
         let minV = 100;
         let maxV = -100;
@@ -346,7 +332,7 @@ export default class GraphController implements GraphInterface {
         return { min: minV, max: maxV };
     }
 
-    private calculateSingleExtremValues(
+    private calculateSingleExtremValues( // extrem values for single group
         ar: {tempA:TempAnomalyArea, groupId:number, color:string}[],
         init?: { min: number; max: number }
     ): { min: number; max: number } {
@@ -362,9 +348,6 @@ export default class GraphController implements GraphInterface {
         return { min: minV, max: maxV };
     }
 
-    //----------------------------------------------
-    // BUILD MEAN DATA FOR EACH GROUP
-    //----------------------------------------------
     initializeData(): void {
         this.extremValues = this.calculateExtremValues();
         this.allMeanData = [];
@@ -372,7 +355,6 @@ export default class GraphController implements GraphInterface {
 
         for (let groupIndex = 0; groupIndex < this.ar.length; groupIndex++) {
             
-            //console.log("LEN : ", this.ar.length, "STEP : ", groupIndex);
             const areaGroup = this.ar[groupIndex];
             this.colors.push(areaGroup[0].color);
 
@@ -403,13 +385,8 @@ export default class GraphController implements GraphInterface {
                 means,
             });
         }
-
-        //console.log("ALL MEAN", this.allMeanData);
     }
 
-    //----------------------------------------------
-    // DRAW GRAPH (MULTI SERIES)
-    //----------------------------------------------
     drawGraph(): void {
         if (!this.canvas || !this.ctx) return;
 
@@ -424,8 +401,6 @@ export default class GraphController implements GraphInterface {
 
         const scale = this.drawGraduations();
 
-        // --- MULTISERIES DRAW ---
-
         for (let i = 0; i < this.allMeanData.length; i++) {
             const serie = this.allMeanData[i].means;
             const color = this.colors[i % this.colors.length];
@@ -435,9 +410,6 @@ export default class GraphController implements GraphInterface {
         this.drawYearLine(this.yearRef);
     }
 
-    //----------------------------------------------
-    // DRAW A SINGLE SERIES
-    //----------------------------------------------
     private drawLineAndPoints(
         data: YearValue[],
         scale: { scaleX: number; scaleY: number },
@@ -495,12 +467,7 @@ export default class GraphController implements GraphInterface {
         }
     }
 
-    //----------------------------------------------
-    redrawGraph() {
-        this.drawGraph();
-    }
-
-    drawEmptyData(): void {
+    drawEmptyData(): void { // in case no group has been created yet
         if (!this.canvas || !this.ctx) return;
         this.ctx.save();
         this.ctx.textAlign = "center";
@@ -510,6 +477,4 @@ export default class GraphController implements GraphInterface {
 
         this.isEmpty = true;
     }
-
-    // (le reste identique : drawAxis, drawGraduations, onMouseDown…)
 }

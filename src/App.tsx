@@ -7,7 +7,6 @@ import { SettingPan } from './Components/SettingPan'
 import { Map } from './Components/Map'
 import GraphView from "./Components/GraphView"
 import ViewList from "./Components/ViewList"
-// import { setMapHeight, setViewerHeight } from "./Redux/Slice/GlobalSlice"
 import { setViewerLayout, type ViewKey } from "./Redux/Slice/GlobalSlice"
 
 function App() {
@@ -23,7 +22,6 @@ function App() {
   const [showSettingPan, setShowSettingPan] = useState(false)
 
   const [mapHeight, setMapHeight] = useState(window.innerHeight * 0.6);
-  // const [viewerHeight, setViewerHeight] = useState(window.innerHeight * 0.4);
 
   useEffect(() => {
     dispatch(loadEarthImage())

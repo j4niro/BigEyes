@@ -1,8 +1,12 @@
+/* 
+  Controller of Heatmap View
+
+  AI Assistance : ~30% (Optimization and common debugging task)
+*/
 import GraphBar from "./GraphBar";
 import type { TempAnomalyArea, TempAnomalyData } from "../../Redux/Slice/DataSlice";
 import getTempAnomalyColor from "../../Utils/tempAnomalyColor";
-import type { GraphInterface } from "./GraphInterface";
-import { setCurrentLat, setYearRange, addLatitudeSelected } from "../../Redux/Slice/GlobalSlice";
+import { setYearRange, addLatitudeSelected } from "../../Redux/Slice/GlobalSlice";
 
 export interface heatMapControllerProperties {
     allAreas : TempAnomalyData;
@@ -10,7 +14,7 @@ export interface heatMapControllerProperties {
     dispatcher:(func:any)=>any;
 }
 
-export default class HeatMapController implements GraphInterface {
+export default class HeatMapController{
     private canvas: HTMLCanvasElement | null = null;
     private ctx: CanvasRenderingContext2D | null = null;
     private heatMatrixPaths: GraphBar<{ lat: number, year: number, temp: number }>[] = [];
@@ -19,7 +23,6 @@ export default class HeatMapController implements GraphInterface {
     private offsetX: number;
     private offsetY: number;
     private ar: TempAnomalyArea[];
-    // private offscreenCanvas: HTMLCanvasElement | null = null;
     private selectedBar: GraphBar<any> | null = null;
 
 
@@ -42,46 +45,44 @@ export default class HeatMapController implements GraphInterface {
             this.setLat(info.lat);
     };
 
-    setYear(year:number) {
+    setYear(year:number) { // set year selected in Redux store
             this.dispatch(setYearRange({start:year, end:2025}));
         }
     
-    setLat(lat:number){
-        //this.dispatch(setCurrentLat(lat));
+    setLat(lat:number){ // add latitude to Redux store
         this.dispatch(addLatitudeSelected({
             id:0, // will be updated by reducer
             lat:lat,
         }));
     }
 
-    setCanvas(canvas: HTMLCanvasElement | null) {
+    setCanvas(canvas: HTMLCanvasElement | null) { // initialize canvas
         this.canvas = canvas;
         this.ctx = canvas?.getContext("2d") || null;
     }
 
-    updateData(ar: TempAnomalyArea[]) {
+    updateData(ar: TempAnomalyArea[]) { // in case Props are updated
         this.ar = ar;
 
         this.drawGraph();
     }
 
-    // Fonctions de conversion
-    private X(an: number): number | undefined {
+    private X(an: number): number | undefined { // year to year count
         if (an < 1880 || an > 2025) return undefined;
         return an - 1880;
     }
 
-    private Y(lat: number): number | undefined {
+    private Y(lat: number): number | undefined { // latitude to latitude count
         if (lat < -88 || lat > 88 || lat % 4 !== 0) return undefined;
         return (lat + 88) / 4;
     }
 
-    private tX(an: number): number | undefined {
+    private tX(an: number): number | undefined { // year count to year 
         if (an < 0 || an > 145) return undefined;
         return an + 1880;
     }
 
-    private tY(lat: number): number | undefined {
+    private tY(lat: number): number | undefined { // latitude count to latitude on Y-axis
         if (lat < 0 || lat > 44) return undefined;
         return 4 * lat - 88;
     }
@@ -106,8 +107,6 @@ export default class HeatMapController implements GraphInterface {
         }
 
         this.heatMatrix = _heatMatrix;
-
-        //-------------------------------------------------------------
 
         if (!this.ctx || !this.canvas) return;
 
@@ -154,26 +153,22 @@ export default class HeatMapController implements GraphInterface {
         for (const bar of this.heatMatrixPaths) {
             if (bar.contains(clickX, clickY)) {
                 const info = bar.getInfo();
-                this.selectedBar = bar; // Mémorisation directe
-        
-                //this.redrawGraph(); // redessine avec la bonne sélection
+                this.selectedBar = bar;
+
                 return info;
             }
 
         }
     }
 
-    redrawGraph(): void {
+    redrawGraph(): void { // 'Draw' without updating raw data
         if (!this.canvas || !this.ctx) return;
 
-        // Efface le canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Redessine axes + graduations
         this.drawGraduations();
         this.drawAxis();
 
-        // Redessine carrés
         for (const bar of this.heatMatrixPaths) {
             const info = bar.getInfo();
             bar.draw(getTempAnomalyColor(info.temp)); // normal
@@ -198,7 +193,7 @@ export default class HeatMapController implements GraphInterface {
         this.ctx.lineTo(x + w, y + h);
         this.ctx.stroke();
 
-        // Flèche Y
+        // Arrow Y-Axis
         this.ctx.beginPath();
         this.ctx.moveTo(x, y);
         this.ctx.lineTo(x, y - 10);
@@ -210,7 +205,7 @@ export default class HeatMapController implements GraphInterface {
         this.ctx.lineTo(x, y - 10);
         this.ctx.fill();
 
-        // Flèche X
+        // Arrow X-Axis
         this.ctx.beginPath();
         this.ctx.moveTo(x + w, y + h);
         this.ctx.lineTo(x + w + 10, y + h);
@@ -239,7 +234,7 @@ export default class HeatMapController implements GraphInterface {
         const stepY = h / nbBars;
         const stepX = w / nbYears;
 
-        // Graduations Y
+        // Graduations Y-Axis
         for (let i = 0; i <= nbBars; i++) {
             const yy = y + i * stepY;
 
@@ -263,14 +258,14 @@ export default class HeatMapController implements GraphInterface {
             }
         }
 
-        // Nom Y
+        // Name Y-Axis
         this.ctx.save();
         this.ctx.translate((this.offset * 1.5) / 3, w / 2);
         this.ctx.rotate(-Math.PI / 2);
         this.ctx.fillText("Latitude", (this.offset * 1.5) / 2 - 5, 0);
         this.ctx.restore();
 
-        // Graduation X
+        // Graduation X-Axis
         let year = 1880;
         this.ctx.lineWidth = 1;
         for (let index = 0; index < w && year + index <= 2025; index += 1) {
@@ -296,13 +291,13 @@ export default class HeatMapController implements GraphInterface {
             this.ctx.restore();
         }
 
-        // Nom X
+        // Name X-Axis
         this.ctx.save();
         this.ctx.translate(w / 2 + (this.offset * 1.5) / 3, h + (this.offset * 5) / 3);
         this.ctx.fillText("Year", (this.offset * 1.5) / 2, 5);
         this.ctx.restore();
 
-        return { stepX, stepY };
+        return { stepX, stepY }; // used for scaling data on graph canvas according to graduations
     }
 
     CoordToPos(x: number, y: number, stepX: number, stepY: number): { x: number; y: number } | undefined {
@@ -318,39 +313,18 @@ export default class HeatMapController implements GraphInterface {
     drawGraph(): void {
         if (!this.canvas || !this.ctx) return;
 
-        this.initializeData(); // Calcule la matrice
-
-        // 1. Créer ou redimensionner le canvas hors-écran
-        // if (!this.offscreenCanvas) {
-        //     this.offscreenCanvas = document.createElement('canvas');
-        // }
-        // this.offscreenCanvas.width = this.canvas.width;
-        // this.offscreenCanvas.height = this.canvas.height;
-
-        // const osCtx = this.offscreenCanvas.getContext('2d');
-        // if (!osCtx) return;
-
-        // 2. Dessiner sur le canvas HORS-ÉCRAN (offscreen)
-        // Note: Il faut temporairement dire à vos méthodes de dessiner sur osCtx
-        // ou bien copier le résultat final. 
-        // Pour simplifier sans casser vos objets GraphBar, on va dessiner sur le vrai canvas
-        // puis sauvegarder le résultat.
+        this.initializeData();
         
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.drawAxis();        // Dessine sur this.ctx
-        this.drawGraduations(); // Dessine sur this.ctx
+        this.drawAxis();
+        this.drawGraduations();
         
         this.heatMatrixPaths.forEach(square => {
-            // Attention: GraphBar dessine probablement sur this.ctx par défaut
-            // Assurez-vous qu'il dessine sa couleur "normale" (non sélectionnée) ici
             square.draw(); 
         });
 
-        // 3. COPIER le résultat final dans le canvas hors-écran pour sauvegarde
-        // osCtx.drawImage(this.canvas, 0, 0);
-
         if (this.selectedBar) {
-                this.selectedBar.draw("black"); // Dessine juste celui-ci en noir
+                this.selectedBar.draw("black");
                 console.log("OK BAR");
             }
     }

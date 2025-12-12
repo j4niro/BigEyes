@@ -5,8 +5,6 @@ import React, { useState, useEffect, useMemo } from 'react'
 import './SettingPan.css'
 import { useAppDispatch, useAppSelector } from '../Redux/Hooks/StoreHooks'
 import { 
-  addLatitudeSelected, 
-  setYearRange,
   setSelectionMode,
   deleteLatitudeSelected,
   deleteAreaSelected,
@@ -15,7 +13,6 @@ import {
   removeAreaFromGroup,
   deleteGroup,
   updateAreaName,
-  type Latitude 
 } from '../Redux/Slice/GlobalSlice'
 import { SettingPanController } from '../Controllers/SettingPanController'
 import cursor from '../../public/Cursor_Latitude_Select.png'

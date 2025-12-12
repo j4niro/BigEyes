@@ -1,3 +1,11 @@
+/* 
+  Controller ViewList
+
+  AI Assistance : ~50% (Main Structure)
+
+  GEMINI PROMPT : See ViewList Component for prompt
+*/
+
 // Définition des props nécessaires au fonctionnement du contrôleur
 export interface ViewListControllerProps {
   onHeightChange: (height: 0|0.8|0.4) => void;

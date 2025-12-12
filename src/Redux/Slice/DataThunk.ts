@@ -1,3 +1,6 @@
+/*
+  Thunk used for managing map's main image loading
+*/
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { loadImage } from "../../Utils/MapImageLoader";
 

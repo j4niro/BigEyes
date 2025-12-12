@@ -1,3 +1,7 @@
+/*
+  Slice dedicated to manage raw data from JSON file provided by teacher
+*/
+
 import { createSlice } from "@reduxjs/toolkit";
 import JSONdata from "../../Utils/tempanomaly_4x4grid_v2.json"
 import { loadEarthImage } from "./DataThunk";
@@ -37,8 +41,6 @@ const dataSlice = createSlice({
     });
   },
 });
-
-// ----------------------
 
 export default dataSlice.reducer;
 export const {  } = dataSlice.actions;

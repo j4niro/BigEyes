@@ -2,7 +2,7 @@
 // AI Assistance: ~40% (Redux patterns, optimization strategies, event handling structure, and debugging support)
 
 import React, { useState, useMemo, useRef, useEffect } from 'react'
-import './Map.css'
+import './Map.css' 
 import { useAppDispatch, useAppSelector } from '../Redux/Hooks/StoreHooks'
 import { MapController } from '../Controllers/MapController'
 import { AnimationController } from '../Controllers/AnimationController'
@@ -16,7 +16,7 @@ import gostart from '../../public/gostart_button.png'
 import goend from '../../public/goend_button.png'
 import earthImage from '../../public/earth.png'
 import refresh from '../../public/refresh.png'
-import { setYearRange, setMapDimensions, setAreaScaledCoordinates, alertMapHeight, setMapLayout } from '../Redux/Slice/GlobalSlice'
+import { setYearRange, setMapDimensions, setAreaScaledCoordinates, setMapLayout } from '../Redux/Slice/GlobalSlice'
 
 export const Map = () => {
   const dispatch = useAppDispatch()
@@ -61,7 +61,7 @@ export const Map = () => {
   const [speed, setSpeed] = useState<1 | 1.5 | 2>(1)
   const [showSpeedMenu, setShowSpeedMenu] = useState(false)
 
-  const [isResizing, setIsResizing] = useState(false)
+  // const [isResizing, setIsResizing] = useState(false)
 
   // Controllers memoized to preserve instance across re-renders
   const mapController = useMemo(() => new MapController(dispatch), [dispatch])
@@ -195,28 +195,28 @@ export const Map = () => {
     }
   }, [animationController])
 
-  // Handle manual map resizing via drag
-  useEffect(() => {
-    if (!isResizing) return
+  // // Handle manual map resizing via drag
+  // useEffect(() => {
+  //   if (!isResizing) return
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const newHeight = e.clientY
-      setMapHeight(newHeight)
-      dispatch(alertMapHeight(newHeight))
-    }
+  //   const handleMouseMove = (e: MouseEvent) => {
+  //     const newHeight = e.clientY
+  //     setMapHeight(newHeight)
+  //     // dispatch(alertMapHeight(newHeight)) 
+  //   }
 
-    const handleMouseUp = () => {
-      setIsResizing(false)
-    }
+  //   const handleMouseUp = () => {
+  //     setIsResizing(false)
+  //   }
 
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
+  //   document.addEventListener('mousemove', handleMouseMove)
+  //   document.addEventListener('mouseup', handleMouseUp)
 
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [isResizing, dispatch])
+  //   return () => {
+  //     document.removeEventListener('mousemove', handleMouseMove)
+  //     document.removeEventListener('mouseup', handleMouseUp)
+  //   }
+  // }, [isResizing, dispatch])
 
   /**
    * Calculate scaled area coordinates based on original position and current dimensions

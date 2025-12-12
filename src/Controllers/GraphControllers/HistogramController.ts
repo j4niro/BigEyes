@@ -1,7 +1,11 @@
+/* 
+  Controller of Histogram View
+
+  AI Assistance : ~60% (Developped from scratch but refactored by Gemini because of persistant bug / common debugging task)
+*/
 import GraphBar from "./GraphBar";
 import type { TempAnomalyArea, TempAnomalyData } from "../../Redux/Slice/DataSlice";
-import type { GraphInterface } from "./GraphInterface";
-import { setCurrentLong, addLatitudeSelected, addAreaSelected, setAreaToCache } from "../../Redux/Slice/GlobalSlice";
+import { setCurrentLong, setAreaToCache } from "../../Redux/Slice/GlobalSlice";
 
 export interface histogramControllerProperties {
     allAreas: TempAnomalyData;
@@ -11,7 +15,7 @@ export interface histogramControllerProperties {
     dispatcher: (func: any) => any;
 }
 
-export default class HistogramController implements GraphInterface {
+export default class HistogramController {
     // --- Canvas & Context ---
     private canvas: HTMLCanvasElement | null = null;
     private ctx: CanvasRenderingContext2D | null = null;

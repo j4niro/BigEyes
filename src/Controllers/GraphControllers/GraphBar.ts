@@ -1,3 +1,8 @@
+/* 
+  This class is used for interactive bars and squares displayed on histogram and heatmap
+
+  AI Assistance : ~0% (Except common debugging errors)
+*/
 export default class GraphBar<T> {
   public shape: Path2D;
   public width: number;
@@ -27,7 +32,7 @@ export default class GraphBar<T> {
     this.shape.rect(x, y, w, h);
   }
 
-  draw(color?: string) {
+  draw(color?: string) { // render the bar on graph canvas
     this.ctx.save();
 
     this.ctx.fillStyle = this.color;
@@ -41,12 +46,11 @@ export default class GraphBar<T> {
     this.ctx.restore();
   }
 
-  contains(x: number, y: number): boolean {
+  contains(x: number, y: number): boolean { //check if the bar is the one clicked by user
     return this.ctx.isPointInPath(this.shape, x, y);
   }
 
-  getInfo(): T {
-    //console.log(this.value);
+  getInfo(): T { //return single bar information details
     return this.value;
   }
 }

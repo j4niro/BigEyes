@@ -1,7 +1,16 @@
+/* 
+  Controller Regression View
+
+  AI Assistance : ~100% (Except from my own ajustment due to common debugging task)
+
+  GEMINI PROMPT : "
+    ça va.
+    Je veux maintenant que tu code un nouveau composant graph qui s'inspire de ma structure habituelle que je te mets ci-dessous. 
+    Le nouveau graphe doit afficher les droites de regression des anomalies de températures
+  "
+*/
 import type { TempAnomalyArea, TempAnomalyData } from "../../Redux/Slice/DataSlice";
 import { setYearRange } from "../../Redux/Slice/GlobalSlice";
-import type { GraphInterface } from "./GraphInterface";
-
 
 interface RegressionLine {
     lat: number;
@@ -19,7 +28,7 @@ export interface regressionControllerProperties {
     dispatcher:(func:any)=>any;
 }
 
-export default class RegressionController implements GraphInterface {
+export default class RegressionController {
     private canvas: HTMLCanvasElement | null = null;
     private ctx: CanvasRenderingContext2D | null = null;
     
@@ -394,13 +403,6 @@ export default class RegressionController implements GraphInterface {
         for (let i = 0; i <= nbGradY; i++) {
             const val = min + (rangeTemp * i) / nbGradY;
             const yPos = this.offsetY + this.height - (val - min) * scaleY;
-
-            // Ligne de grille
-            // this.ctx.beginPath();
-            // this.ctx.moveTo(this.offsetX, yPos);
-            // this.ctx.lineTo(this.offsetX + this.width, yPos);
-            // this.ctx.stroke();
-
             
             this.ctx.beginPath();
             this.ctx.strokeStyle = "black";

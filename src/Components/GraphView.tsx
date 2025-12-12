@@ -1,3 +1,17 @@
+/* 
+  Generic GraphView component
+
+  WARNING : ONLY FOR GRAPH 'Graph View :)' PLEASE CREATE GROUP, EVEN FOR A SINGLE AREA SELECTED (We decided to plot data for areas groups only)
+
+  WARNING : WHEN YOU CLICK A HISTOGRAM BAR, THE AREA CORRESPONDING APPEAR ON THE RED LATITUDE LINE ON THE MAP, BUT IT IS QUITE SMALL, SO, PLEASE PAY ATTENTION
+
+  AI Assistance : ~90% (Ajusted after being generated from multiple components we coded. )
+
+  GEMINI PROMPT : "
+    - J'ai presque terminé mon projet, je suis entrain de le nettoyer.
+    Voici la liste des composants de type graph que j'ai développés. Je veux un composant générique pour tous à qui on passe les propriétés appropriées en fonction du graphique que l'on veut afficher :...
+  "
+*/
 import "./GraphView.css";
 import { useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../Redux/Hooks/StoreHooks";
