@@ -69,6 +69,13 @@ export const Map = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
+useEffect(() => {
+  // Démarrer l'animation automatiquement au chargement
+  animationController.play(currentYear, (year, progress) => {
+    setCurrentYear(year)
+    setYearProgress(progress)
+  })
+}, []) 
 
   useEffect(() => {
     mapController.setSelectionMode(currentSelectionMode)
