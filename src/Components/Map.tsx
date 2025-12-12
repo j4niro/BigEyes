@@ -89,6 +89,7 @@ export const Map = () => {
         break;
     }
   }, [viewerLayout])
+  
 
   useEffect(() => {
     if(!areaInCache) return;
@@ -99,35 +100,45 @@ export const Map = () => {
     setCurrentYear(yearRange.start)
   }, [yearRange.start])
 
-  // ✅ Initialiser les dimensions de référence une seule fois
+  // Mettre à jour les dimensions de référence si la map change significativement
   useEffect(() => {
-    if (mapDimensions.width > 0 && mapDimensions.height > 0 && referenceDimensions.width === 0) {
-      // console.log('Initialisation dimensions référence:', mapDimensions)
+  if (mapDimensions.width > 0 && mapDimensions.height > 0) {
+    const hasSignificantChange = 
+      referenceDimensions.width === 0 || 
+      Math.abs(mapDimensions.height - referenceDimensions.height) > 50 // Changement > 50px
+    
+    if (hasSignificantChange) {
+      console.log('🔄 Mise à jour dimensions référence:', mapDimensions)
+      
+      // Mettre à jour les coordonnées originales des areas existantes avec leur position actuelle scalée
+      const updatedCoords: typeof originalAreaCoords = {}
+      selectedAreas.forEach(area => {
+        const scaledArea = getScaledAreaCoordinates(area)
+        updatedCoords[area.id] = {
+          topLeft: { x: scaledArea.topLeft.x, y: scaledArea.topLeft.y },
+          bottomRight: { x: scaledArea.bottomRight.x, y: scaledArea.bottomRight.y }
+        }
+      })
+      
+      // Nouvelles dimensions de référence
       setReferenceDimensions({
         width: mapDimensions.width,
         height: mapDimensions.height
       })
       
-      // Sauvegarder les coordonnées originales des areas existantes
-      const coords: typeof originalAreaCoords = {}
-      selectedAreas.forEach(area => {
-        coords[area.id] = {
-          topLeft: { x: area.topLeft.x, y: area.topLeft.y },
-          bottomRight: { x: area.bottomRight.x, y: area.bottomRight.y }
-        }
-        console.log(`💾 Area ${area.id} - Coords originales:`, coords[area.id])
-      })
-      setOriginalAreaCoords(coords)
+      // Coordonnées mises à jour
+      setOriginalAreaCoords(updatedCoords)
     }
-  }, [mapDimensions, referenceDimensions.width, selectedAreas])
+  }
+}, [mapDimensions.width, mapDimensions.height])
 
-  // ✅ Sauvegarder les coordonnées originales des nouvelles areas
+  // Sauvegarder les coordonnées originales des nouvelles areas
   useEffect(() => {
     if (referenceDimensions.width === 0) return // Pas encore de référence
     
     selectedAreas.forEach(area => {
       if (!originalAreaCoords[area.id]) {
-        console.log(`➕ Nouvelle area ${area.id} détectée, sauvegarde coords originales`)
+        console.log(` Nouvelle area ${area.id} détectée, sauvegarde coords originales`)
         setOriginalAreaCoords(prev => ({
           ...prev,
           [area.id]: {
@@ -239,6 +250,8 @@ export const Map = () => {
     const rect = mapWrapperRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
+    console.log('🖱️ MouseDown - clientY:', e.clientY, 'rect.top:', rect.top, 'y calculé:', y)
+  
     setDragStart({ x, y })
     setDragCurrent({ x, y })
     mapController.handleMouseDown(x, y)
@@ -249,6 +262,8 @@ export const Map = () => {
     const rect = mapWrapperRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
+    console.log('🖱️ MouseMove - clientY:', e.clientY, 'rect.top:', rect.top, 'y calculé:', y)
+  
     setDragCurrent({ x, y })
   }
 
@@ -257,6 +272,8 @@ export const Map = () => {
     const rect = mapWrapperRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
+    console.log('🖱️ MouseUp - clientY:', e.clientY, 'rect.top:', rect.top, 'y calculé:', y)
+  
     mapController.handleMouseUp(x, y, mapDimensions.width, mapDimensions.height)
     setDragStart(null)
     setDragCurrent(null)
@@ -433,7 +450,7 @@ export const Map = () => {
         {selectedAreas.map(area => {
           const scaledArea = getScaledAreaCoordinates(area)
           const group = areaGroups.find(g => g.id === area.groupId)
-          const borderColor = group ? group.color : '#25c900ff'
+          const borderColor = group ? group.color : '#00FF00'
           
           return (
             <div
