@@ -462,8 +462,20 @@ export const Map = () => {
                 width: `${scaledArea.bottomRight.x - scaledArea.topLeft.x}px`,
                 height: `${scaledArea.bottomRight.y - scaledArea.topLeft.y}px`,
                 border: `2px solid ${borderColor}`,
-                backgroundColor: group ? `${borderColor}20` : 'rgba(0, 255, 0, 0.15)',
-                boxShadow: `0 0 10px ${borderColor}99`,
+                backgroundColor: group ? (() => {
+                    const hex = borderColor.replace('#', '')
+                    const r = parseInt(hex.substring(0, 2), 16)
+                    const g = parseInt(hex.substring(2, 4), 16)
+                    const b = parseInt(hex.substring(4, 6), 16)
+                    return `rgba(${r}, ${g}, ${b}, 0.3)`
+                    })() : 'rgba(0, 255, 0, 0.15)',
+                boxShadow: group ? (() => {
+                    const hex = borderColor.replace('#', '')
+                    const r = parseInt(hex.substring(0, 2), 16)
+                    const g = parseInt(hex.substring(2, 4), 16)
+                    const b = parseInt(hex.substring(4, 6), 16)
+                    return `0 0 10px rgba(${r}, ${g}, ${b}, 0.7)`
+                  })() : '0 0 10px rgba(0, 255, 0, 0.7)',
                 pointerEvents: 'auto',
                 zIndex: 20,
                 cursor: 'pointer',
