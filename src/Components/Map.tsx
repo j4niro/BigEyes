@@ -1,3 +1,6 @@
+// components/Map.tsx - Main map visualization component with interactive controls
+// AI Assistance: ~40% (Redux patterns, optimization strategies, event handling structure, and debugging support)
+
 import React, { useState, useMemo, useRef, useEffect } from 'react'
 import './Map.css'
 import { useAppDispatch, useAppSelector } from '../Redux/Hooks/StoreHooks'
@@ -17,6 +20,8 @@ import { setYearRange, setMapDimensions, setAreaScaledCoordinates, alertMapHeigh
 
 export const Map = () => {
   const dispatch = useAppDispatch()
+  
+  // Redux state selectors for centralized state management
   const tempData = useAppSelector(state => state.data.tempData)
   const selectedLatitudes = useAppSelector(state => state.globalState.selectedLatitudes)
   const selectedAreas = useAppSelector(state => state.globalState.selectedAreas)
@@ -24,19 +29,20 @@ export const Map = () => {
   const yearRange = useAppSelector(state => state.globalState.yearRange)
   const currentSelectionMode = useAppSelector(state => state.globalState.currentSelectionMode)
   const mapDimensions = useAppSelector(state => state.globalState.mapDimensions) 
-
   const viewerLayout = useAppSelector(state => state.globalState.screenLayout.viewerLayout) 
-
   const areaInCache = useAppSelector(state => state.globalState.areaCached) 
 
+  // DOM reference for coordinate calculations
   const mapWrapperRef = useRef<HTMLDivElement>(null)
+  
+  // Local state for animation and interaction
   const [currentYear, setCurrentYear] = useState(yearRange.start)
   const [yearProgress, setYearProgress] = useState(0)
   
-  // Dimensions de référence (première initialisation)
+  // Reference dimensions for proportional area scaling during resize
   const [referenceDimensions, setReferenceDimensions] = useState({ width: 0, height: 0 })
   
-  // Coordonnées originales des areas à leur création
+  // Store original coordinates of areas at creation time for accurate scaling
   const [originalAreaCoords, setOriginalAreaCoords] = useState<{
     [key: number]: {
       topLeft: { x: number, y: number }
@@ -46,21 +52,24 @@ export const Map = () => {
   
   const [hoveredArea, setHoveredArea] = useState<number | null>(null)
   
+  // Drag state for area selection
   const [dragStart, setDragStart] = useState<{x: number, y: number} | null>(null)
   const [dragCurrent, setDragCurrent] = useState<{x: number, y: number} | null>(null)
 
+  // Animation playback state
   const [isPlaying, setIsPlaying] = useState(true)
   const [speed, setSpeed] = useState<1 | 1.5 | 2>(1)
   const [showSpeedMenu, setShowSpeedMenu] = useState(false)
 
   const [isResizing, setIsResizing] = useState(false)
 
+  // Controllers memoized to preserve instance across re-renders
   const mapController = useMemo(() => new MapController(dispatch), [dispatch])
   const animationController = useMemo(() => new AnimationController(dispatch), [dispatch])
 
   const [mapHeight, setMapHeight] = useState(window.innerHeight);
 
-
+  // Initialize map height and window resize listener
   useEffect(() => {
     setIsPlaying(true);
     const onResize = () => {
@@ -70,97 +79,96 @@ export const Map = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-useEffect(() => {
-  // Démarrer l'animation automatiquement au chargement
-  animationController.play(currentYear, (year, progress) => {
-    setCurrentYear(year)
-    setYearProgress(progress)
-  })
-}, []) 
+  // Auto-start animation on component mount
+  useEffect(() => {
+    animationController.play(currentYear, (year, progress) => {
+      setCurrentYear(year)
+      setYearProgress(progress)
+    })
+  }, []) 
 
+  // Update selection mode in controller when it changes
   useEffect(() => {
     mapController.setSelectionMode(currentSelectionMode)
   }, [currentSelectionMode, mapController])
 
+  // Adjust map height based on viewer layout state
   useEffect(() => {
     switch (viewerLayout) {
       case 0:
         setMapHeight(window.innerHeight);
         break;
-
       case 0.4:
         setMapHeight(window.innerHeight * 0.6);
         break;
-
       case 0.8:
         setMapHeight(window.innerHeight * 0.2);
         break;
     }
   }, [viewerLayout])
   
-
+  // Handle cached area selection from external source
   useEffect(() => {
     if(!areaInCache) return;
     mapController.selectSquareAtCoordinates(areaInCache.lat, areaInCache.lon, mapDimensions.width, mapDimensions.height);
   }, [areaInCache])
 
+  // Sync local year state with Redux year range
   useEffect(() => {
     setCurrentYear(yearRange.start)
   }, [yearRange.start])
 
-  // Mettre à jour les dimensions de référence si la map change significativement
+  // Update reference dimensions when map undergoes significant size change
+  // This prevents cumulative scaling errors during multiple resizes
   useEffect(() => {
-  if (mapDimensions.width > 0 && mapDimensions.height > 0) {
-    const hasSignificantChange = 
-      referenceDimensions.width === 0 || 
-      Math.abs(mapDimensions.height - referenceDimensions.height) > 50 // Changement > 50px
-    
-    if (hasSignificantChange) {
-      console.log('🔄 Mise à jour dimensions référence:', mapDimensions)
+    if (mapDimensions.width > 0 && mapDimensions.height > 0) {
+      const hasSignificantChange = 
+        referenceDimensions.width === 0 || 
+        Math.abs(mapDimensions.height - referenceDimensions.height) > 50
       
-      // Mettre à jour les coordonnées originales des areas existantes avec leur position actuelle scalée
-      const updatedCoords: typeof originalAreaCoords = {}
-      selectedAreas.forEach(area => {
-        const scaledArea = getScaledAreaCoordinates(area)
-        updatedCoords[area.id] = {
-          topLeft: { x: scaledArea.topLeft.x, y: scaledArea.topLeft.y },
-          bottomRight: { x: scaledArea.bottomRight.x, y: scaledArea.bottomRight.y }
-        }
-      })
-      
-      // Nouvelles dimensions de référence
-      setReferenceDimensions({
-        width: mapDimensions.width,
-        height: mapDimensions.height
-      })
-      
-      // Coordonnées mises à jour
-      setOriginalAreaCoords(updatedCoords)
+      if (hasSignificantChange) {
+        console.log('🔄 Updating reference dimensions:', mapDimensions)
+        
+        // Recalculate area coordinates based on current scaled positions
+        const updatedCoords: typeof originalAreaCoords = {}
+        selectedAreas.forEach(area => {
+          const scaledArea = getScaledAreaCoordinates(area)
+          updatedCoords[area.id] = {
+            topLeft: { x: scaledArea.topLeft.x, y: scaledArea.topLeft.y },
+            bottomRight: { x: scaledArea.bottomRight.x, y: scaledArea.bottomRight.y }
+          }
+        })
+        
+        setReferenceDimensions({
+          width: mapDimensions.width,
+          height: mapDimensions.height
+        })
+        
+        setOriginalAreaCoords(updatedCoords)
+      }
     }
-  }
-}, [mapDimensions.width, mapDimensions.height])
+  }, [mapDimensions.width, mapDimensions.height])
 
-  // Sauvegarder les coordonnées originales des nouvelles areas
+  // Save original coordinates for newly created areas
   useEffect(() => {
-    if (referenceDimensions.width === 0) return // Pas encore de référence
+    if (referenceDimensions.width === 0) return
     
     selectedAreas.forEach(area => {
       if (!originalAreaCoords[area.id]) {
-        console.log(` Nouvelle area ${area.id} détectée, sauvegarde coords originales`)
+        console.log(` New area ${area.id} detected, saving original coords`)
         setOriginalAreaCoords(prev => ({
           ...prev,
           [area.id]: {
             topLeft: { x: area.topLeft.x, y: area.topLeft.y },
             bottomRight: { x: area.bottomRight.x, y: area.bottomRight.y }
           }
-
         }))
       }
       dispatch(setAreaScaledCoordinates(getScaledAreaCoordinates(area)));
     })
   }, [selectedAreas, originalAreaCoords, referenceDimensions.width])
 
-  // Mettre à jour les dimensions du canvas
+  // Update canvas dimensions using ResizeObserver for accurate tracking
   useEffect(() => {
     if (mapWrapperRef.current) {
       const updateDimensions = () => {
@@ -180,12 +188,14 @@ useEffect(() => {
     }
   }, [mapHeight])
 
+  // Cleanup animation controller on unmount
   useEffect(() => {
     return () => {
       animationController.cleanup()
     }
   }, [animationController])
 
+  // Handle manual map resizing via drag
   useEffect(() => {
     if (!isResizing) return
 
@@ -208,20 +218,21 @@ useEffect(() => {
     }
   }, [isResizing, dispatch])
 
-  // Calculer les coordonnées scalées depuis l'ORIGINAL
+  /**
+   * Calculate scaled area coordinates based on original position and current dimensions
+   * Prevents cumulative scaling errors by always computing from original coordinates
+   */
   const getScaledAreaCoordinates = (area: typeof selectedAreas[0]) => {
-    // Pas encore de dimensions de référence
     if (referenceDimensions.width === 0 || referenceDimensions.height === 0) {
       return area
     }
 
-    // Pas de coordonnées originales sauvegardées pour cette area
     const originalCoords = originalAreaCoords[area.id]
     if (!originalCoords) {
       return area
     }
 
-    // Calculer le ratio depuis la RÉFÉRENCE (première taille de la map)
+    // Calculate scale ratios from reference dimensions, not previous state
     const scaleX = mapDimensions.width / referenceDimensions.width
     const scaleY = mapDimensions.height / referenceDimensions.height
 
@@ -239,6 +250,7 @@ useEffect(() => {
     return scaled
   }
 
+  // Event handlers for user interactions
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const year = parseInt(e.target.value)
     setCurrentYear(year)
@@ -253,40 +265,44 @@ useEffect(() => {
     mapController.handleMapClick(x, y, mapDimensions.width, mapDimensions.height)
   }
 
+  // Area selection via drag: mouse down initiates selection
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!mapWrapperRef.current || currentSelectionMode !== 'area') return
     const rect = mapWrapperRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
-    console.log('🖱️ MouseDown - clientY:', e.clientY, 'rect.top:', rect.top, 'y calculé:', y)
+    console.log('🖱️ MouseDown - clientY:', e.clientY, 'rect.top:', rect.top, 'y calc:', y)
   
     setDragStart({ x, y })
     setDragCurrent({ x, y })
     mapController.handleMouseDown(x, y)
   }
 
+  // Track mouse movement during drag for visual feedback
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!mapWrapperRef.current || !dragStart || currentSelectionMode !== 'area') return
     const rect = mapWrapperRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
-    console.log('🖱️ MouseMove - clientY:', e.clientY, 'rect.top:', rect.top, 'y calculé:', y)
+    console.log('🖱️ MouseMove - clientY:', e.clientY, 'rect.top:', rect.top, 'y calc:', y)
   
     setDragCurrent({ x, y })
   }
 
+  // Complete area selection on mouse up
   const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!mapWrapperRef.current) return
     const rect = mapWrapperRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
-    console.log('🖱️ MouseUp - clientY:', e.clientY, 'rect.top:', rect.top, 'y calculé:', y)
+    console.log('🖱️ MouseUp - clientY:', e.clientY, 'rect.top:', rect.top, 'y calc:', y)
   
     mapController.handleMouseUp(x, y, mapDimensions.width, mapDimensions.height)
     setDragStart(null)
     setDragCurrent(null)
   }
 
+  // Toggle animation playback
   const handlePlayPause = () => {
     if (isPlaying) {
       animationController.pause()
@@ -300,6 +316,7 @@ useEffect(() => {
     }
   }
 
+  // Jump backward by decade
   const handlePrevious10 = () => {
     if (isPlaying) {
       animationController.pause()
@@ -308,6 +325,7 @@ useEffect(() => {
     animationController.previous10Years(currentYear)
   }
 
+  // Jump forward by decade
   const handleNext10 = () => {
     if (isPlaying) {
       animationController.pause()
@@ -316,6 +334,7 @@ useEffect(() => {
     animationController.next10Years(currentYear)
   }
 
+  // Toggle between normal and fullscreen map view
   const handleZoomClick = () => {
     if(viewerLayout !== 0){
       setMapHeight(window.innerHeight)
@@ -326,6 +345,7 @@ useEffect(() => {
     }
   }
 
+  // Jump to start year (1880)
   const handleGoToStart = () => {
     if (isPlaying) {
       animationController.pause()
@@ -334,6 +354,7 @@ useEffect(() => {
     animationController.goToStart()
   }
 
+  // Jump to end year (2025)
   const handleGoToEnd = () => {
     if (isPlaying) {
       animationController.pause()
@@ -342,22 +363,24 @@ useEffect(() => {
     animationController.goToEnd()
   }
 
+  // Restart animation from beginning
   const handleRestart = () => {
-  animationController.pause()
-  setIsPlaying(false)
-  setCurrentYear(1880)
-  dispatch(setYearRange({ start: 1880, end: 1880 }))
-  
-  // Relancer l'animation automatiquement
-  setTimeout(() => {
-    setIsPlaying(true)
-    animationController.play(1880, (year, progress) => {
-      setCurrentYear(year)
-      setYearProgress(progress)
-    })
-  }, 100)
-}
+    animationController.pause()
+    setIsPlaying(false)
+    setCurrentYear(1880)
+    dispatch(setYearRange({ start: 1880, end: 1880 }))
+    
+    // Slight delay before restarting ensures state updates complete
+    setTimeout(() => {
+      setIsPlaying(true)
+      animationController.play(1880, (year, progress) => {
+        setCurrentYear(year)
+        setYearProgress(progress)
+      })
+    }, 100)
+  }
 
+  // Change animation playback speed
   const handleSpeedChange = (newSpeed : 1 | 1.5 | 2) => {
     setSpeed(newSpeed)
     animationController.setSpeed(newSpeed)
@@ -371,8 +394,10 @@ useEffect(() => {
     }
   }
 
+  // Calculate slider position percentage for current year
   const yearPercentage = ((currentYear - 1880) / (2025 - 1880)) * 100
 
+  // Generate latitude grid lines every 20 degrees
   const latitudeGraduations = useMemo(() => {
     const grads = []
     for (let lat = 88; lat >= -88; lat -= 20) {
@@ -382,6 +407,7 @@ useEffect(() => {
     return grads
   }, [])
 
+  // Generate longitude grid lines every 20 degrees
   const longitudeGraduations = useMemo(() => {
     const grads = []
     for (let lon = -180; lon <= 180; lon += 20) {
@@ -391,6 +417,7 @@ useEffect(() => {
     return grads
   }, [])
 
+  // Temperature anomaly color scale legend data
   const legendData = [
     { label: '< -3°C', color: 'rgb(0, 10, 100)' },
     { label: '-2.5°C', color: 'rgb(0, 40, 160)' },
@@ -409,6 +436,7 @@ useEffect(() => {
 
   return (
     <div className='map-container' style={{ height: `${mapHeight}px` }}>
+      {/* Main interactive map wrapper */}
       <div 
         className='map-wrapper'
         ref={mapWrapperRef}
@@ -423,6 +451,7 @@ useEffect(() => {
         }}
         style={{ cursor: currentSelectionMode ? 'crosshair' : 'default' }}
       >
+        {/* Render canvas layers once dimensions are available */}
         {mapDimensions.width > 0 && mapDimensions.height > 0 && (
           <AnomalyCanvas
             year={currentYear}
@@ -434,6 +463,7 @@ useEffect(() => {
           />
         )}
 
+        {/* Geographic reference grid - latitude lines */}
         <div className='latitude-grid'>
           {latitudeGraduations.map(({ lat, y }) => (
             <div key={lat} className='latitude-line' style={{top: `${y}%`}}>
@@ -442,6 +472,7 @@ useEffect(() => {
           ))}
         </div>
 
+        {/* Geographic reference grid - longitude lines */}
         <div className='longitude-grid'>
           {longitudeGraduations.map(({ lon, x }) => (
             <div key={lon} className='longitude-line' style={{left: `${x}%`}}>
@@ -450,6 +481,7 @@ useEffect(() => {
           ))}
         </div>
 
+        {/* Render selected latitude lines with glow effect */}
         {selectedLatitudes.map(latitude => {
           const y = mapController.convertLatitudeToMapY(latitude.lat, mapDimensions.height)
           return (
@@ -470,7 +502,7 @@ useEffect(() => {
           )
         })}
 
-        {/* Areas avec scaling depuis coordonnées originales */}
+        {/* Render selected areas with group colors and scaling */}
         {selectedAreas.map(area => {
           const scaledArea = getScaledAreaCoordinates(area)
           const group = areaGroups.find(g => g.id === area.groupId)
@@ -486,6 +518,7 @@ useEffect(() => {
                 width: `${scaledArea.bottomRight.x - scaledArea.topLeft.x}px`,
                 height: `${scaledArea.bottomRight.y - scaledArea.topLeft.y}px`,
                 border: `2px solid ${borderColor}`,
+                // Convert hex color to rgba for semi-transparent fill
                 backgroundColor: group ? (() => {
                     const hex = borderColor.replace('#', '')
                     const r = parseInt(hex.substring(0, 2), 16)
@@ -511,7 +544,7 @@ useEffect(() => {
           )
         })}
 
-        {/* ✅ Tooltip métadonnées area */}
+        {/* Tooltip with area metadata on hover */}
         {hoveredArea !== null && (() => {
           const area = selectedAreas.find(a => a.id === hoveredArea)
           if (!area) return null
@@ -519,6 +552,7 @@ useEffect(() => {
           const scaledArea = getScaledAreaCoordinates(area)
           const group = areaGroups.find(g => g.id === area.groupId)
           
+          // Convert pixel coordinates back to geographic coordinates
           const latTop = 90 - (scaledArea.topLeft.y / mapDimensions.height) * 180
           const latBottom = 90 - (scaledArea.bottomRight.y / mapDimensions.height) * 180
           const lonLeft = (scaledArea.topLeft.x / mapDimensions.width) * 360 - 180
@@ -562,19 +596,20 @@ useEffect(() => {
                   borderRadius: '3px',
                   display: 'inline-block'
                 }}>
-                  Groupe: {group.name}
+                  Group: {group.name}
                 </div>
               )}
               
               <div style={{ fontSize: '10px', color: '#333', lineHeight: '1.5' }}>
-                <div><strong>Latitude:</strong> {latTop.toFixed(1)}° à {latBottom.toFixed(1)}°</div>
-                <div><strong>Longitude:</strong> {lonLeft.toFixed(1)}° à {lonRight.toFixed(1)}°</div>
+                <div><strong>Latitude:</strong> {latTop.toFixed(1)}° to {latBottom.toFixed(1)}°</div>
+                <div><strong>Longitude:</strong> {lonLeft.toFixed(1)}° to {lonRight.toFixed(1)}°</div>
                 <div><strong>Dimensions:</strong> {(scaledArea.bottomRight.x - scaledArea.topLeft.x).toFixed(0)}×{(scaledArea.bottomRight.y - scaledArea.topLeft.y).toFixed(0)} px</div>
               </div>
             </div>
           )
         })()}
 
+        {/* Visual feedback during area selection drag */}
         {dragStart && dragCurrent && (
           <div
             style={{
@@ -592,7 +627,7 @@ useEffect(() => {
           />
         )}
 
-        {/* Légende horizontale */}
+        {/* Horizontal color scale legend at bottom right */}
         <div
           style={{
             position: 'absolute',
@@ -645,6 +680,7 @@ useEffect(() => {
         </div>
       </div>
 
+      {/* Year navigation slider with decade markers */}
       <div className='year-navigation'>
         <div className='year-slider-container'>
           <div className='year-label' style={{ left: `calc(${yearPercentage}% - 20px)` }}>
@@ -669,7 +705,9 @@ useEffect(() => {
         </div>
       </div>
 
+      {/* Animation and view controls */}
       <div className='animation-controls'>
+        {/* Speed selection dropdown */}
         <div style={{ position: 'relative' }}>
           <button 
             onClick={() => setShowSpeedMenu(!showSpeedMenu)}
@@ -725,27 +763,29 @@ useEffect(() => {
           )}
         </div>
     
+        {/* Playback controls with decade navigation */}
         <div className='control-section playback-controls'>
-          <button className='control-btn' onClick={handlePrevious10} title="-10 ans">
+          <button className='control-btn' onClick={handlePrevious10} title="-10 years">
             <img src={moins10} alt="" height={21} width={21} />
           </button>
-          <button className='control-btn' onClick={handleGoToStart} title="Début (1880)">
+          <button className='control-btn' onClick={handleGoToStart} title="Start (1880)">
             <img src={gostart} alt="" />
           </button>
           <button className='control-btn play-btn' onClick={handlePlayPause} title={isPlaying ? "Pause" : "Play"}>
             <img src={isPlaying ? pause : start} alt="" />
           </button>
-          <button className='control-btn' onClick={handleRestart} title="Redémarrer">
+          <button className='control-btn' onClick={handleRestart} title="Restart">
             <img src={refresh} alt="" height={21} width={21} />
           </button>
-          <button className='control-btn' onClick={handleGoToEnd} title="Fin (2025)">
+          <button className='control-btn' onClick={handleGoToEnd} title="End (2025)">
             <img src={goend} alt=""  />
           </button>
-          <button className='control-btn' onClick={handleNext10} title="+10 ans">
+          <button className='control-btn' onClick={handleNext10} title="+10 years">
             <img src={plus10} alt="" height={21} width={21} />
           </button>
         </div>
 
+        {/* Fullscreen toggle button */}
         <button
           className='control-section zoom-section'
           onClick={handleZoomClick}
@@ -754,6 +794,7 @@ useEffect(() => {
         </button>
       </div>
 
+      {/* Resize handle (currently disabled) */}
       <div 
         className='map-resize-handle'
         // onMouseDown={handleResizeMouseDown}
