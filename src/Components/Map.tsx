@@ -58,13 +58,13 @@ export const Map = () => {
   const mapController = useMemo(() => new MapController(dispatch), [dispatch])
   const animationController = useMemo(() => new AnimationController(dispatch), [dispatch])
 
-  const [mapHeight, setMapHeight] = useState(window.innerHeight * 0.6);
+  const [mapHeight, setMapHeight] = useState(window.innerHeight);
 
 
   useEffect(() => {
     setIsPlaying(true);
     const onResize = () => {
-      setMapHeight(window.innerHeight * 0.6);
+      setMapHeight(window.innerHeight);
     };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
