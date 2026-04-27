@@ -1,4 +1,4 @@
-# BigEyes — Global Temperature Viewer
+# BigEyes - Global Temperature Viewer
 
 Projet réalisé dans le cadre de l'UE ISI 2025-2026 à IMT Atlantique. L'application permet de visualiser les anomalies de température à la surface du globe entre 1880 et 2025, à partir des données NASA GISTEMP fournies par l'enseignant au format `tempanomaly_4x4grid.json`. L'utilisateur peut naviguer dans le temps, sélectionner des latitudes ou des zones sur la carte, regrouper plusieurs zones pour les comparer, et observer les résultats à travers plusieurs vues interactives reliées entre elles.
 
@@ -20,6 +20,8 @@ Vite expose alors l'application sur `http://localhost:5173` par défaut. Pour pr
 Aucune configuration supplémentaire n'est nécessaire : les données d'anomalies de température sont importées directement depuis `src/Utils/tempanomaly_4x4grid_v2.json`, et l'image de la carte (`public/earth.png`) est chargée via un thunk Redux au démarrage.
 
 ## Architecture du code
+
+<img width="1892" height="1728" alt="Architecture" src="https://github.com/user-attachments/assets/6c276be4-0fc6-44c9-b7df-c853f209d4b7" />
 
 L'organisation suit une séparation nette entre la couche de présentation, la logique métier et l'état global. Le dossier `src/Components` contient les composants React purement visuels : `Map` pour la carte interactive et ses contrôles de navigation, `AnomalyCanvas` pour le rendu de la couche de température, `SettingPan` pour le panneau de configuration des sélections (latitudes, zones, groupes), `GraphView` comme composant générique de vue secondaire, et `ViewList` pour la barre d'onglets qui pilote l'affichage et la disposition des vues.
 
